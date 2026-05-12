@@ -48,7 +48,7 @@ node scripts/init-db.mjs
 
 | 用户名 | 密码 | 角色 |
 |--------|------|------|
-| tommy | tommy123 | 所有者 |
+| root | root | 所有者 |
 
 ### 5. 启动开发服务器
 
