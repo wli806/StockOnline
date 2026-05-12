@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  role      String   @default("VIEWER") // OWNER | INVESTOR | VIEWER
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  name          String
+  type          String   // wine | pokemon | other
+  standardPrice Float
+  unit          String   @default("瓶")
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  inventoryItem      InventoryItem?
+  purchaseOrderItems PurchaseOrderItem[]
+  customerOrderItems CustomerOrderItem[]
+}
+
+model InventoryItem {
+  id        String   @id @default(cuid())
+  productId String   @unique
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model Supplier {
+  id             String          @id @default(cuid())
+  name           String
+  contact        String?
+  notes          String?
+  createdAt      DateTime        @default(now())
+  purchaseOrders PurchaseOrder[]
+}
+
+model PurchaseOrder {
+  id              String              @id @default(cuid())
+  supplierOrderNo String
+  supplierId      String?
+  supplier        Supplier?           @relation(fields: [supplierId], references: [id])
+  status          String              @default("PENDING") // PENDING | ARRIVED
+  notes           String?
+  orderedAt       DateTime            @default(now())
+  arrivedAt       DateTime?
+  items           PurchaseOrderItem[]
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id])
+  productName     String
+  quantity        Int
+  unitCost        Float
+}
+
+model Customer {
+  address   String          @id
+  name      String
+  phone     String?
+  notes     String?
+  createdAt DateTime        @default(now())
+  orders    CustomerOrder[]
+}
+
+model CustomerOrder {
+  id              String              @id @default(cuid())
+  customerAddress String
+  customer        Customer            @relation(fields: [customerAddress], references: [address])
+  status          String              @default("PENDING") // PENDING | COMPLETED | CANCELLED
+  notes           String?
+  orderDate       DateTime            @default(now())
+  totalRevenue    Float               @default(0)
+  totalCost       Float               @default(0)
+  totalProfit     Float               @default(0)
+  items           CustomerOrderItem[]
+}
+
+model CustomerOrderItem {
+  id              String        @id @default(cuid())
+  customerOrderId String
+  customerOrder   CustomerOrder @relation(fields: [customerOrderId], references: [id], onDelete: Cascade)
+  productId       String?
+  product         Product?      @relation(fields: [productId], references: [id])
+  productName     String
+  quantity        Int
+  standardPrice   Float
+  actualPrice     Float
+  costPrice       Float         @default(0)
+  profit          Float         @default(0)
+}
+
+model FinancialRecord {
+  id          String   @id @default(cuid())
+  type        String   // INCOME | EXPENSE
+  amount      Float
+  description String
+  category    String?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+}

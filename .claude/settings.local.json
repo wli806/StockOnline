@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(New-Item -ItemType Directory -Force \"d:\\\\0-develop\\\\1-code\\\\Tommy_web_proj\\\\src\\\\app\\\\api\\\\suppliers\\\\[id]\")",
+      "Bash(Out-Null)"
+    ]
+  }
+}
