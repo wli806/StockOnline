@@ -55,6 +55,7 @@ cp .env.example .env
 ### 4. 初始化数据库
 
 ```bash
+npx prisma generate
 npx prisma migrate deploy
 node scripts/init-db.mjs
 ```
