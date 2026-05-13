@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Plus, CheckCircle, ShoppingCart, ChevronDown, ChevronUp } from "lucide-react";
 import { useSession } from "@/components/SessionProvider";
+import { useCurrency } from "@/components/CurrencyProvider";
 import { format } from "date-fns";
 
 interface Product { id: string; name: string; unit: string; standardPrice: number; }
@@ -37,6 +38,7 @@ export default function PurchaseOrdersPage() {
   const { role } = useSession();
   const isOwner = role === "OWNER";
   const canSeeFinancials = role === "OWNER" || role === "INVESTOR";
+  const { fmt } = useCurrency();
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -159,7 +161,7 @@ export default function PurchaseOrdersPage() {
                   <p className="text-slate-500">{order.items.length} 件商品</p>
                   {canSeeFinancials && (
                     <p className="font-semibold text-slate-700">
-                      ${order.items.reduce((s, i) => s + i.quantity * i.unitCost, 0).toFixed(2)}
+                      {fmt(order.items.reduce((s, i) => s + i.quantity * i.unitCost, 0))}
                     </p>
                   )}
                 </div>
@@ -194,8 +196,8 @@ export default function PurchaseOrdersPage() {
                       <tr key={item.id}>
                         <td className="py-2 text-slate-700">{item.productName}</td>
                         <td className="py-2 text-right text-slate-600">{item.quantity}</td>
-                        {canSeeFinancials && <td className="py-2 text-right text-slate-600">${item.unitCost.toFixed(2)}</td>}
-                        {canSeeFinancials && <td className="py-2 text-right font-medium text-slate-700">${(item.quantity * item.unitCost).toFixed(2)}</td>}
+                        {canSeeFinancials && <td className="py-2 text-right text-slate-600">{fmt(item.unitCost)}</td>}
+                        {canSeeFinancials && <td className="py-2 text-right font-medium text-slate-700">{fmt(item.quantity * item.unitCost)}</td>}
                       </tr>
                     ))}
                   </tbody>

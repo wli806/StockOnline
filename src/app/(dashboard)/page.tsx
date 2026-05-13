@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Package, Warehouse, ShoppingCart, Users, TrendingUp, AlertTriangle, ClipboardList } from "lucide-react";
+import { useCurrency } from "@/components/CurrencyProvider";
 import { format } from "date-fns";
 
 interface DashboardData {
@@ -35,6 +36,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function DashboardPage() {
+  const { fmt } = useCurrency();
   const [data, setData] = useState<DashboardData | null>(null);
 
   useEffect(() => {
@@ -53,8 +55,8 @@ export default function DashboardPage() {
   }
 
   const cards = [
-    { label: "本月营收", value: `$${data.monthRevenue.toFixed(2)}`, icon: TrendingUp, color: "bg-blue-600", sub: `${data.monthOrderCount} 笔订单` },
-    { label: "本月利润", value: `$${data.monthProfit.toFixed(2)}`, icon: TrendingUp, color: "bg-emerald-600", sub: `利润率 ${data.monthRevenue > 0 ? ((data.monthProfit / data.monthRevenue) * 100).toFixed(1) : 0}%` },
+    { label: "本月营收", value: fmt(data.monthRevenue), icon: TrendingUp, color: "bg-blue-600", sub: `${data.monthOrderCount} 笔订单` },
+    { label: "本月利润", value: fmt(data.monthProfit), icon: TrendingUp, color: "bg-emerald-600", sub: `利润率 ${data.monthRevenue > 0 ? ((data.monthProfit / data.monthRevenue) * 100).toFixed(1) : 0}%` },
     { label: "商品种类", value: data.totalProducts, icon: Package, color: "bg-violet-600", sub: `${data.lowStockCount} 种库存不足` },
     { label: "客户总数", value: data.totalCustomers, icon: Users, color: "bg-orange-500", sub: "以地址为标识" },
     { label: "待到货采购", value: data.pendingPurchaseOrders, icon: ShoppingCart, color: "bg-red-500", sub: "等待确认入库" },
@@ -106,8 +108,8 @@ export default function DashboardPage() {
                 <tr key={order.id}>
                   <td className="py-2.5 text-slate-600">{format(new Date(order.orderDate), "MM/dd HH:mm")}</td>
                   <td className="py-2.5 text-slate-700 font-medium">{order.customer.name}</td>
-                  <td className="py-2.5 text-right text-slate-700">${order.totalRevenue.toFixed(2)}</td>
-                  <td className="py-2.5 text-right text-emerald-600 font-medium">${order.totalProfit.toFixed(2)}</td>
+                  <td className="py-2.5 text-right text-slate-700">{fmt(order.totalRevenue)}</td>
+                  <td className="py-2.5 text-right text-emerald-600 font-medium">{fmt(order.totalProfit)}</td>
                   <td className="py-2.5 text-center">
                     <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLOR[order.status]}`}>
                       {STATUS_LABEL[order.status]}

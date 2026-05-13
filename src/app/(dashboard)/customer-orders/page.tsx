@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Plus, ClipboardList, ChevronDown, ChevronUp, Trash2, PackageSearch } from "lucide-react";
 import { useSession } from "@/components/SessionProvider";
+import { useCurrency } from "@/components/CurrencyProvider";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Suspense } from "react";
@@ -70,6 +71,7 @@ function CustomerOrdersContent() {
   const { role } = useSession();
   const isOwner = role === "OWNER";
   const canSeeFinancials = role === "OWNER" || role === "INVESTOR";
+  const { fmt } = useCurrency();
   const searchParams = useSearchParams();
   const customerAddressFilter = searchParams.get("customerAddress") || "";
 
@@ -241,8 +243,8 @@ function CustomerOrdersContent() {
               <div className="flex items-center gap-3 flex-shrink-0 ml-4">
                 {canSeeFinancials && (
                   <div className="text-right text-sm">
-                    <p className="text-slate-600">营收 <span className="font-semibold text-slate-800">${order.totalRevenue.toFixed(2)}</span></p>
-                    <p className="text-emerald-600 font-semibold">利润 ${order.totalProfit.toFixed(2)}</p>
+                    <p className="text-slate-600">营收 <span className="font-semibold text-slate-800">{fmt(order.totalRevenue)}</span></p>
+                    <p className="text-emerald-600 font-semibold">利润 {fmt(order.totalProfit)}</p>
                   </div>
                 )}
                 <select
@@ -281,11 +283,11 @@ function CustomerOrdersContent() {
                       <tr key={item.id}>
                         <td className="py-2.5 text-slate-700">{item.productName}</td>
                         <td className="py-2.5 text-right text-slate-500">{item.quantity}</td>
-                        {canSeeFinancials && <td className="py-2.5 text-right text-slate-400">${item.costPrice.toFixed(2)}</td>}
-                        <td className="py-2.5 text-right text-slate-700">${item.actualPrice.toFixed(2)}</td>
+                        {canSeeFinancials && <td className="py-2.5 text-right text-slate-400">{fmt(item.costPrice)}</td>}
+                        <td className="py-2.5 text-right text-slate-700">{fmt(item.actualPrice)}</td>
                         {canSeeFinancials && (
                           <td className={`py-2.5 text-right font-medium ${item.profit >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-                            ${item.profit.toFixed(2)}
+                            {fmt(item.profit)}
                           </td>
                         )}
                       </tr>
@@ -296,7 +298,7 @@ function CustomerOrdersContent() {
                       <tr className="border-t border-slate-200 text-sm font-semibold">
                         <td colSpan={4} className="pt-2.5 text-slate-600">合计</td>
                         <td className={`pt-2.5 text-right ${order.totalProfit >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-                          ${order.totalProfit.toFixed(2)}
+                          {fmt(order.totalProfit)}
                         </td>
                       </tr>
                     </tfoot>
@@ -484,10 +486,10 @@ function CustomerOrdersContent() {
 
               {/* 合计预览 */}
               <div className="mt-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex justify-between text-sm">
-                <span className="text-slate-500">预计营收：<span className="font-semibold text-slate-800">${totalRevenue.toFixed(2)}</span></span>
+                <span className="text-slate-500">预计营收：<span className="font-semibold text-slate-800">{fmt(totalRevenue)}</span></span>
                 <span className="text-slate-500">预计利润：
                   <span className={`font-bold ml-1 ${totalProfit >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-                    ${totalProfit.toFixed(2)}
+                    {fmt(totalProfit)}
                   </span>
                 </span>
               </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Package, Lock } from "lucide-react";
 import { useSession } from "@/components/SessionProvider";
+import { useCurrency } from "@/components/CurrencyProvider";
 
 interface Product {
   id: string;
@@ -38,6 +39,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 export default function ProductsPage() {
   const { role } = useSession();
   const isOwner = role === "OWNER";
+  const { fmt } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -156,7 +158,7 @@ export default function ProductsPage() {
                       {TYPE_LABEL[p.type] || p.type}
                     </span>
                   </td>
-                  <td className="px-4 py-3.5 text-right font-semibold text-slate-700 tabular-nums">${p.standardPrice.toFixed(2)}</td>
+                  <td className="px-4 py-3.5 text-right font-semibold text-slate-700 tabular-nums">{fmt(p.standardPrice)}</td>
                   <td className="px-4 py-3.5 text-center text-slate-500">{p.unit}</td>
                   <td className="px-4 py-3.5 text-right">
                     <span className={`font-semibold ${(p.inventoryItem?.quantity ?? 0) <= 5 ? "text-red-500" : "text-slate-700"}`}>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Plus, DollarSign, TrendingUp, TrendingDown, Trash2, Lock } from "lucide-react";
 import { useSession } from "@/components/SessionProvider";
+import { useCurrency } from "@/components/CurrencyProvider";
 import { format } from "date-fns";
 
 interface FinancialRecord {
@@ -29,6 +30,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 export default function FinancePage() {
   const { role } = useSession();
   const isOwner = role === "OWNER";
+  const { fmt } = useCurrency();
   const [records, setRecords] = useState<FinancialRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -111,7 +113,7 @@ export default function FinancePage() {
               <Icon size={16} className={color} />
               <span className="text-sm text-slate-600">{label}</span>
             </div>
-            <p className={`text-2xl font-bold ${color}`}>${value.toFixed(2)}</p>
+            <p className={`text-2xl font-bold ${color}`}>{fmt(value)}</p>
           </div>
         ))}
       </div>
@@ -161,7 +163,7 @@ export default function FinancePage() {
                   <td className="px-4 py-3 text-slate-700 font-medium">{r.description}</td>
                   <td className="px-4 py-3 text-slate-500">{r.category || "-"}</td>
                   <td className={`px-4 py-3 text-right font-semibold ${r.type === "INCOME" ? "text-emerald-600" : "text-red-500"}`}>
-                    {r.type === "INCOME" ? "+" : "-"}${r.amount.toFixed(2)}
+                    {r.type === "INCOME" ? "+" : "-"}{fmt(r.amount)}
                   </td>
                   {isOwner && (
                     <td className="px-4 py-3 text-center">

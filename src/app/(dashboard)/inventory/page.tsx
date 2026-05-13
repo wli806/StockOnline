@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Warehouse, Pencil, AlertTriangle } from "lucide-react";
 import { useSession } from "@/components/SessionProvider";
+import { useCurrency } from "@/components/CurrencyProvider";
 
 interface InventoryItem {
   id: string;
@@ -30,6 +31,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 export default function InventoryPage() {
   const { role } = useSession();
   const isOwner = role === "OWNER";
+  const { fmt } = useCurrency();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [editItem, setEditItem] = useState<InventoryItem | null>(null);
@@ -135,9 +137,9 @@ export default function InventoryPage() {
                       </span>
                       <span className="text-slate-400 ml-1">{item.product.unit}</span>
                     </td>
-                    <td className="px-4 py-3.5 text-right text-slate-600">${item.product.standardPrice.toFixed(2)}</td>
+                    <td className="px-4 py-3.5 text-right text-slate-600">{fmt(item.product.standardPrice)}</td>
                     <td className="px-4 py-3.5 text-right text-slate-600">
-                      ${(item.quantity * item.product.standardPrice).toFixed(2)}
+                      {fmt(item.quantity * item.product.standardPrice)}
                     </td>
                     {isOwner && (
                       <td className="px-4 py-3.5 text-center">

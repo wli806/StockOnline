@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useCurrency } from "@/components/CurrencyProvider";
 import {
   LayoutDashboard,
   Package,
@@ -37,6 +38,7 @@ interface SidebarProps {
 export default function Sidebar({ role, username }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { currency, toggle } = useCurrency();
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -83,7 +85,22 @@ export default function Sidebar({ role, username }: SidebarProps) {
         })}
       </nav>
 
-      <div className="px-3 py-4 border-t border-slate-700">
+      <div className="px-3 pt-3 pb-1 border-t border-slate-700">
+        <p className="text-xs text-slate-500 px-1 mb-1.5">货币</p>
+        <div className="flex bg-slate-800 rounded-lg p-0.5">
+          {(["AUD", "CNY"] as const).map((c) => (
+            <button
+              key={c}
+              onClick={() => c !== currency && toggle()}
+              className={`flex-1 py-1 text-xs rounded-md transition-colors font-medium ${currency === c ? "bg-slate-600 text-white" : "text-slate-400 hover:text-white"}`}
+            >
+              {c === "AUD" ? "$ AUD" : "¥ CNY"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="px-3 py-4 border-slate-700">
         <div className="px-3 py-2 mb-2">
           <p className="text-xs text-slate-400">登录账户</p>
           <p className="text-sm font-medium text-white">{username}</p>

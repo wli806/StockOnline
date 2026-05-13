@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { BarChart2, TrendingUp, Lock } from "lucide-react";
 import { useSession } from "@/components/SessionProvider";
+import { useCurrency } from "@/components/CurrencyProvider";
 
 interface ReportRow {
   label: string;
@@ -17,6 +18,7 @@ const MONTHS = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", 
 
 export default function ReportsPage() {
   const { role } = useSession();
+  const { fmt } = useCurrency();
   const now = new Date();
   const [viewType, setViewType] = useState<"month" | "week">("month");
   const [year, setYear] = useState(now.getFullYear());
@@ -87,7 +89,7 @@ export default function ReportsPage() {
         ].map(({ label, value, color }) => (
           <div key={label} className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm">
             <p className="text-xs text-slate-400 mb-1">{label}</p>
-            <p className={`text-xl font-bold ${color}`}>${value.toFixed(2)}</p>
+            <p className={`text-xl font-bold ${color}`}>{fmt(value)}</p>
           </div>
         ))}
       </div>
@@ -112,7 +114,7 @@ export default function ReportsPage() {
                 return (
                   <div key={row.label} className="flex-1 flex flex-col items-center gap-1">
                     <span className={`text-xs font-semibold ${row.net >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-                      {row.net >= 0 ? "+" : ""}${row.net.toFixed(0)}
+                      {row.net >= 0 ? "+" : ""}{fmt(row.net)}
                     </span>
                     <div className="w-full flex flex-col justify-end" style={{ height: "100px" }}>
                       <div
@@ -143,12 +145,12 @@ export default function ReportsPage() {
                 {data.map((row) => (
                   <tr key={row.label} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-3 font-medium text-slate-700">{row.label}</td>
-                    <td className="px-4 py-3 text-right text-slate-600">${row.revenue.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right text-emerald-600">${row.profit.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right text-blue-500">${row.income.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right text-red-400">${row.expense.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right text-slate-600">{fmt(row.revenue)}</td>
+                    <td className="px-4 py-3 text-right text-emerald-600">{fmt(row.profit)}</td>
+                    <td className="px-4 py-3 text-right text-blue-500">{fmt(row.income)}</td>
+                    <td className="px-4 py-3 text-right text-red-400">{fmt(row.expense)}</td>
                     <td className={`px-6 py-3 text-right font-bold ${row.net >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-                      {row.net >= 0 ? "+" : ""}${row.net.toFixed(2)}
+                      {row.net >= 0 ? "+" : ""}{fmt(row.net)}
                     </td>
                   </tr>
                 ))}
