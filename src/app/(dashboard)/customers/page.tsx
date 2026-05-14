@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Users, MapPin, Phone, ExternalLink, Lock } from "lucide-react";
+import { Plus, Users, MapPin, Phone, ExternalLink, Lock, Download } from "lucide-react";
 import { useSession } from "@/components/SessionProvider";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -38,6 +38,15 @@ export default function CustomersPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [exportStart, setExportStart] = useState("");
+  const [exportEnd, setExportEnd] = useState("");
+
+  function handleExport() {
+    const params = new URLSearchParams();
+    if (exportStart) params.set("start", exportStart);
+    if (exportEnd) params.set("end", exportEnd);
+    window.location.href = `/api/export/customers?${params}`;
+  }
 
   async function load() {
     setLoading(true);
@@ -97,6 +106,25 @@ export default function CustomersPage() {
         >
           <Plus size={16} /> 添加客户
         </button>
+      </div>
+
+      <div className="flex items-center gap-3 mb-4 bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5">
+        <Download size={14} className="text-slate-400 flex-shrink-0" />
+        <span className="text-sm text-slate-500">导出:</span>
+        <input type="date" value={exportStart} onChange={(e) => setExportStart(e.target.value)}
+          className="px-2 py-1 border border-slate-200 rounded text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500" />
+        <span className="text-slate-400 text-sm">至</span>
+        <input type="date" value={exportEnd} onChange={(e) => setExportEnd(e.target.value)}
+          className="px-2 py-1 border border-slate-200 rounded text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500" />
+        <button onClick={handleExport}
+          className="flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-medium transition-colors">
+          <Download size={13} /> 下载 CSV
+        </button>
+        {(exportStart || exportEnd) && (
+          <button onClick={() => { setExportStart(""); setExportEnd(""); }}
+            className="text-sm text-slate-400 hover:text-slate-600">清除</button>
+        )}
+        <span className="text-xs text-slate-400 ml-auto">不选日期则导出全部</span>
       </div>
 
       <div className="mb-4">
