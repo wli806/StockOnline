@@ -24,13 +24,10 @@ export async function POST(request: NextRequest) {
     const token = await signToken({ userId: user.id, username: user.username, role: user.role });
 
     const response = NextResponse.json({ success: true, role: user.role });
-    response.cookies.set("auth_token", token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7,
-      path: "/",
-    });
+    response.headers.set(
+      "Set-Cookie",
+      `auth_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}`
+    );
     return response;
   } catch {
     return NextResponse.json({ error: "服务器错误" }, { status: 500 });
