@@ -11,7 +11,7 @@ model User {
   id        String   @id @default(cuid())
   username  String   @unique
   password  String
-  role      String   @default("VIEWER") // OWNER | INVESTOR | VIEWER
+  role      String   @default("VIEWER") // OWNER | MANAGER | INVESTOR | VIEWER
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

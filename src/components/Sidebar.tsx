@@ -26,7 +26,7 @@ const navItems = [
   { href: "/suppliers", label: "供应商", icon: Truck, ownerOnly: true },
   { href: "/customers", label: "客户", icon: Users, ownerOnly: true },
   { href: "/customer-orders", label: "销售订单", icon: ClipboardList },
-  { href: "/sushi", label: "寿司采购", icon: UtensilsCrossed },
+  { href: "/sushi", label: "寿司采购", icon: UtensilsCrossed, strictOwnerOnly: true },
   { href: "/finance", label: "财务流水", icon: DollarSign, investorOrOwnerOnly: true },
   { href: "/reports", label: "利润报表", icon: BarChart2, investorOrOwnerOnly: true },
   { href: "/settings", label: "用户管理", icon: Settings, ownerOnly: true },
@@ -49,8 +49,9 @@ export default function Sidebar({ role, username }: SidebarProps) {
   }
 
   const visibleItems = navItems.filter((item) => {
-    if (item.ownerOnly) return role === "OWNER";
-    if (item.investorOrOwnerOnly) return role === "OWNER" || role === "INVESTOR";
+    if (item.strictOwnerOnly) return role === "OWNER";
+    if (item.ownerOnly) return role === "OWNER" || role === "MANAGER";
+    if (item.investorOrOwnerOnly) return role === "OWNER" || role === "MANAGER" || role === "INVESTOR";
     return true;
   });
 
@@ -107,7 +108,7 @@ export default function Sidebar({ role, username }: SidebarProps) {
           <p className="text-xs text-slate-400">登录账户</p>
           <p className="text-sm font-medium text-white">{username}</p>
           <p className="text-xs text-blue-400 mt-0.5">
-            {role === "OWNER" ? "所有者" : role === "INVESTOR" ? "投资者" : "查看者"}
+            {role === "OWNER" ? "所有者" : role === "MANAGER" ? "管理员" : role === "INVESTOR" ? "投资者" : "查看者"}
           </p>
         </div>
         <button
