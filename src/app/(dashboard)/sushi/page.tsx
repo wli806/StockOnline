@@ -247,7 +247,11 @@ export default function SushiPage() {
         ))}
       </div>
 
-      <SushiCalendar orders={orders} />
+      <div className="flex justify-center">
+        <div className="w-full max-w-xs">
+          <SushiCalendar orders={orders} />
+        </div>
+      </div>
 
       <div className="flex gap-2 mb-4">
         {([["all", "全部"], [1, "待下单"], [2, "已下单"], [3, "已确认"]] as [number | "all", string][]).map(([val, label]) => (

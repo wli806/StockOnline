@@ -16,9 +16,18 @@ import {
   Settings,
   LogOut,
   UtensilsCrossed,
+  Boxes,
+  type LucideIcon,
 } from "lucide-react";
 
-const navItems = [
+interface ChildItem { href: string; label: string; icon: LucideIcon }
+interface NavItem {
+  href: string; label: string; icon: LucideIcon;
+  ownerOnly?: boolean; investorOrOwnerOnly?: boolean; rootOnly?: boolean;
+  children?: ChildItem[];
+}
+
+const navItems: NavItem[] = [
   { href: "/", label: "总览", icon: LayoutDashboard },
   { href: "/products", label: "商品管理", icon: Package, ownerOnly: true },
   { href: "/inventory", label: "库存", icon: Warehouse },
@@ -26,7 +35,12 @@ const navItems = [
   { href: "/suppliers", label: "供应商", icon: Truck, ownerOnly: true },
   { href: "/customers", label: "客户", icon: Users, ownerOnly: true },
   { href: "/customer-orders", label: "销售订单", icon: ClipboardList },
-  { href: "/sushi", label: "寿司采购", icon: UtensilsCrossed, rootOnly: true },
+  {
+    href: "/sushi", label: "寿司采购", icon: UtensilsCrossed, rootOnly: true,
+    children: [
+      { href: "/sushi/inventory", label: "库存统计", icon: Boxes },
+    ],
+  },
   { href: "/finance", label: "财务流水", icon: DollarSign, investorOrOwnerOnly: true },
   { href: "/reports", label: "利润报表", icon: BarChart2, investorOrOwnerOnly: true },
   { href: "/settings", label: "用户管理", icon: Settings, ownerOnly: true },
@@ -69,21 +83,48 @@ export default function Sidebar({ role, username }: SidebarProps) {
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto scrollbar-thin">
-        {visibleItems.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || (href !== "/" && pathname.startsWith(href));
+        {visibleItems.map(({ href, label, icon: Icon, children }) => {
+          const hasChildren = children && children.length > 0;
+          const childActive = hasChildren && children.some(c => pathname === c.href || pathname.startsWith(c.href));
+          const active = !hasChildren
+            ? (pathname === href || (href !== "/" && pathname.startsWith(href)))
+            : pathname === href;
+
           return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                active
-                  ? "bg-blue-600 text-white font-medium"
-                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              <Icon size={17} />
-              <span>{label}</span>
-            </Link>
+            <div key={href}>
+              <Link
+                href={href}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                  active || childActive
+                    ? "bg-blue-600 text-white font-medium"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                }`}
+              >
+                <Icon size={17} />
+                <span>{label}</span>
+              </Link>
+              {hasChildren && (
+                <div className="mt-0.5 ml-2 pl-4 border-l border-slate-700 space-y-0.5">
+                  {children.map(({ href: chref, label: clabel, icon: CIcon }) => {
+                    const cActive = pathname === chref || pathname.startsWith(chref);
+                    return (
+                      <Link
+                        key={chref}
+                        href={chref}
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-colors ${
+                          cActive
+                            ? "bg-blue-500/70 text-white font-medium"
+                            : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                        }`}
+                      >
+                        <CIcon size={14} />
+                        <span>{clabel}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           );
         })}
       </nav>
