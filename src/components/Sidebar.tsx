@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { useCurrency } from "@/components/CurrencyProvider";
 import {
   LayoutDashboard,
@@ -17,6 +18,7 @@ import {
   LogOut,
   UtensilsCrossed,
   Boxes,
+  ChevronDown,
   type LucideIcon,
 } from "lucide-react";
 
@@ -55,6 +57,19 @@ export default function Sidebar({ role, username }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { currency, toggle } = useCurrency();
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    navItems.forEach(item => {
+      if (item.children) {
+        init[item.href] = item.children.some(c => pathname === c.href || pathname.startsWith(c.href));
+      }
+    });
+    return init;
+  });
+
+  function toggleGroup(href: string) {
+    setOpenGroups(prev => ({ ...prev, [href]: !prev[href] }));
+  }
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -89,21 +104,40 @@ export default function Sidebar({ role, username }: SidebarProps) {
           const active = !hasChildren
             ? (pathname === href || (href !== "/" && pathname.startsWith(href)))
             : pathname === href;
+          const isOpen = hasChildren && !!openGroups[href];
 
           return (
             <div key={href}>
-              <Link
-                href={href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                  active || childActive
-                    ? "bg-blue-600 text-white font-medium"
-                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                }`}
-              >
-                <Icon size={17} />
-                <span>{label}</span>
-              </Link>
-              {hasChildren && (
+              {hasChildren ? (
+                <button
+                  onClick={() => toggleGroup(href)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                    active || childActive
+                      ? "bg-blue-600 text-white font-medium"
+                      : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  }`}
+                >
+                  <Icon size={17} />
+                  <span className="flex-1 text-left">{label}</span>
+                  <ChevronDown
+                    size={14}
+                    className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+              ) : (
+                <Link
+                  href={href}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                    active
+                      ? "bg-blue-600 text-white font-medium"
+                      : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  }`}
+                >
+                  <Icon size={17} />
+                  <span>{label}</span>
+                </Link>
+              )}
+              {hasChildren && isOpen && (
                 <div className="mt-0.5 ml-2 pl-4 border-l border-slate-700 space-y-0.5">
                   {children.map(({ href: chref, label: clabel, icon: CIcon }) => {
                     const cActive = pathname === chref || pathname.startsWith(chref);
