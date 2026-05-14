@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { RefreshCw, UtensilsCrossed, ChevronDown, ChevronUp, Package } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { RefreshCw, UtensilsCrossed, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Package } from "lucide-react";
 import { useSession } from "@/components/SessionProvider";
 import { format } from "date-fns";
 
@@ -19,6 +19,153 @@ const STATUS_MAP: Record<number, { label: string; cls: string }> = {
   2: { label: "已下单", cls: "bg-amber-100 text-amber-700" },
   3: { label: "已确认", cls: "bg-green-100 text-green-700" },
 };
+
+const MONTH_NAMES = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
+const DOW_NAMES = ["一","二","三","四","五","六","日"];
+const MONTH_ABBR: Record<string, string> = {
+  jan:"01",feb:"02",mar:"03",apr:"04",may:"05",jun:"06",
+  jul:"07",aug:"08",sep:"09",oct:"10",nov:"11",dec:"12",
+};
+
+function parseToYMD(s: string): string | null {
+  if (!s) return null;
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  const dmy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (dmy) return `${dmy[3]}-${dmy[2].padStart(2,"0")}-${dmy[1].padStart(2,"0")}`;
+  const dm = s.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})/);
+  if (dm) {
+    const m = MONTH_ABBR[dm[2].toLowerCase()];
+    if (m) return `${dm[3]}-${m}-${dm[1].padStart(2,"0")}`;
+  }
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+}
+
+interface DayInfo { hasOrder: boolean; hasDelivery: boolean; suppliers: string[] }
+
+function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
+  const now = new Date();
+  const [cal, setCal] = useState({ year: now.getFullYear(), month: now.getMonth() });
+  const [hovered, setHovered] = useState<string | null>(null);
+
+  const dayMap = useMemo(() => {
+    const map = new Map<string, DayInfo>();
+    for (const o of orders) {
+      const supplier = o.supplierName || "未知供应商";
+      const add = (dateStr: string | null, field: "hasOrder" | "hasDelivery") => {
+        if (!dateStr) return;
+        const k = parseToYMD(dateStr);
+        if (!k) return;
+        const e = map.get(k) ?? { hasOrder: false, hasDelivery: false, suppliers: [] };
+        e[field] = true;
+        if (!e.suppliers.includes(supplier)) e.suppliers.push(supplier);
+        map.set(k, e);
+      };
+      add(o.orderDate, "hasOrder");
+      add(o.deliveryDate, "hasDelivery");
+    }
+    return map;
+  }, [orders]);
+
+  const cells = useMemo(() => {
+    const first = new Date(cal.year, cal.month, 1);
+    const daysInMonth = new Date(cal.year, cal.month + 1, 0).getDate();
+    const startDow = (first.getDay() + 6) % 7;
+    const result: Array<number | null> = Array(startDow).fill(null);
+    for (let d = 1; d <= daysInMonth; d++) result.push(d);
+    while (result.length % 7 !== 0) result.push(null);
+    return result;
+  }, [cal]);
+
+  const todayKey = now.toISOString().slice(0, 10);
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={() => setCal(c => { const d = new Date(c.year, c.month - 1); return { year: d.getFullYear(), month: d.getMonth() }; })}
+          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+        >
+          <ChevronLeft size={16} />
+        </button>
+        <span className="font-semibold text-slate-700 text-sm">{cal.year}年 {MONTH_NAMES[cal.month]}</span>
+        <button
+          onClick={() => setCal(c => { const d = new Date(c.year, c.month + 1); return { year: d.getFullYear(), month: d.getMonth() }; })}
+          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+        >
+          <ChevronRight size={16} />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-7 mb-1">
+        {DOW_NAMES.map(d => (
+          <div key={d} className="text-center text-xs text-slate-400 py-1 font-medium">{d}</div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {cells.map((day, i) => {
+          if (!day) return <div key={i} className="h-10" />;
+          const key = `${cal.year}-${String(cal.month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+          const info = dayMap.get(key);
+          const isToday = key === todayKey;
+          return (
+            <div
+              key={i}
+              className={`relative h-10 flex flex-col items-center justify-center rounded-lg transition-colors
+                ${isToday ? "ring-2 ring-blue-400 ring-inset" : ""}
+                ${info ? "bg-slate-50 hover:bg-slate-100" : "hover:bg-slate-50"}
+              `}
+              onMouseEnter={() => info && setHovered(key)}
+              onMouseLeave={() => setHovered(null)}
+            >
+              <span className={`text-xs leading-none ${isToday ? "font-bold text-blue-600" : "text-slate-600"}`}>
+                {day}
+              </span>
+              {info && (
+                <div className="flex gap-0.5 mt-0.5">
+                  {info.hasOrder && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
+                  {info.hasDelivery && <span className="w-1.5 h-1.5 rounded-full bg-green-500" />}
+                </div>
+              )}
+              {hovered === key && info && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20 bg-slate-800 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap shadow-xl pointer-events-none">
+                  <div className="space-y-1">
+                    {info.hasOrder && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                        <span>下单</span>
+                      </div>
+                    )}
+                    {info.hasDelivery && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+                        <span>配送</span>
+                      </div>
+                    )}
+                    <div className="text-slate-300 pt-0.5 border-t border-slate-600">
+                      {info.suppliers.slice(0, 3).join("、")}{info.suppliers.length > 3 ? " 等" : ""}
+                    </div>
+                  </div>
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex gap-5 mt-3 pt-3 border-t border-slate-100">
+        <div className="flex items-center gap-1.5 text-xs text-slate-500">
+          <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />下单日
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-slate-500">
+          <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />配送日
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function SushiPage() {
   const { role } = useSession();
@@ -99,6 +246,8 @@ export default function SushiPage() {
           </div>
         ))}
       </div>
+
+      <SushiCalendar orders={orders} />
 
       <div className="flex gap-2 mb-4">
         {([["all", "全部"], [1, "待下单"], [2, "已下单"], [3, "已确认"]] as [number | "all", string][]).map(([val, label]) => (
