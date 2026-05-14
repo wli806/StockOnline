@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
         supplierOrderNo: data.supplierOrderNo,
         supplierId: data.supplierId || null,
         notes: data.notes || null,
+        shippingFee: parseFloat(data.shippingFee ?? 0),
         items: {
           create: data.items.map((item: { productId: string; productName: string; quantity: number; unitCost: number }) => ({
             productId: item.productId,

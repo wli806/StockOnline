@@ -31,11 +31,15 @@ export async function GET(request: NextRequest) {
       orderBy: { orderedAt: "desc" },
     });
 
-    const header = ["订单号", "供应商", "状态", "商品名", "数量", "进价(AUD)", "小计(AUD)", "备注", "下单时间", "到货时间"].join(",");
+    const header = ["订单号", "供应商", "状态", "商品名", "数量", "进价(AUD)", "小计(AUD)", "运费(AUD)", "合计(AUD)", "备注", "下单时间", "到货时间"].join(",");
 
     const rows: string[] = [];
     for (const order of orders) {
-      for (const item of order.items) {
+      const itemsTotal = order.items.reduce((s, i) => s + i.quantity * i.unitCost, 0);
+      const grandTotal = itemsTotal + (order.shippingFee ?? 0);
+      for (let idx = 0; idx < order.items.length; idx++) {
+        const item = order.items[idx];
+        const isLast = idx === order.items.length - 1;
         rows.push([
           cell(order.supplierOrderNo),
           cell(order.supplier?.name ?? "未指定"),
@@ -44,6 +48,8 @@ export async function GET(request: NextRequest) {
           cell(item.quantity),
           cell(item.unitCost.toFixed(2)),
           cell((item.quantity * item.unitCost).toFixed(2)),
+          cell(isLast ? (order.shippingFee ?? 0).toFixed(2) : ""),
+          cell(isLast ? grandTotal.toFixed(2) : ""),
           cell(order.notes),
           cell(order.orderedAt.toISOString().split("T")[0]),
           cell(order.arrivedAt ? order.arrivedAt.toISOString().split("T")[0] : ""),
