@@ -15,18 +15,30 @@ function getFiscalWeek(d: Date): number {
 }
 
 async function ossLogin(): Promise<string> {
+  const username = process.env.OSS_USERNAME ?? "";
+  const password = process.env.OSS_PASSWORD ?? "";
+  if (!username || !password) throw new Error("OSS 登录失败：OSS_USERNAME 或 OSS_PASSWORD 未配置");
+
   const res = await fetch(`${BASE}/attemptlogin`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      username: process.env.OSS_USERNAME ?? "",
-      password: process.env.OSS_PASSWORD ?? "",
-    }),
+    body: new URLSearchParams({ username, password }),
     redirect: "manual",
   });
-  const cookie = res.headers.get("set-cookie") ?? "";
+
+  // Try Set-Cookie header first; some CI environments expose multiple values via getSetCookie()
+  let cookie = res.headers.get("set-cookie") ?? "";
+  if (!cookie && typeof (res.headers as Record<string, unknown>).getSetCookie === "function") {
+    cookie = ((res.headers as unknown as { getSetCookie(): string[] }).getSetCookie()).join("; ");
+  }
+
   const m = cookie.match(/ci_session=([^;]+)/);
-  if (!m) throw new Error("OSS 登录失败，请检查账号密码配置");
+  if (!m) {
+    const location = res.headers.get("location") ?? "(none)";
+    throw new Error(
+      `OSS 登录失败 [HTTP ${res.status}, Location: ${location}, Set-Cookie: ${cookie.substring(0, 120) || "(empty)"}] — 请检查账号密码及服务器网络连通性`
+    );
+  }
   return m[1];
 }
 
