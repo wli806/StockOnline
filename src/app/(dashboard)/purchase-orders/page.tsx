@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, CheckCircle, ShoppingCart, ChevronDown, ChevronUp, Download } from "lucide-react";
+import { Plus, CheckCircle, ShoppingCart, ChevronDown, ChevronUp, Download, Trash2 } from "lucide-react";
 import { useSession } from "@/components/SessionProvider";
 import { useCurrency } from "@/components/CurrencyProvider";
 import { format } from "date-fns";
@@ -126,6 +126,13 @@ export default function PurchaseOrdersPage() {
     load();
   }
 
+  async function handleDelete(order: PurchaseOrder) {
+    const warning = order.status === "ARRIVED" ? "⚠️ 该订单已到货，删除后库存数据不会回滚。\n\n" : "";
+    if (!confirm(`${warning}确认删除采购单「${order.supplierOrderNo}」？`)) return;
+    await fetch(`/api/purchase-orders/${order.id}`, { method: "DELETE" });
+    load();
+  }
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
@@ -205,6 +212,11 @@ export default function PurchaseOrdersPage() {
                     >
                       <CheckCircle size={14} />
                       {confirming === order.id ? "处理中..." : "确认到货"}
+                    </button>
+                  )}
+                  {isOwner && (
+                    <button onClick={() => handleDelete(order)} className="text-red-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors">
+                      <Trash2 size={15} />
                     </button>
                   )}
                   <button onClick={() => setExpanded(expanded === order.id ? null : order.id)} className="text-slate-400 hover:text-slate-600">
