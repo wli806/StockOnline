@@ -28,7 +28,7 @@ async function ossLogin(): Promise<string> {
 
   // Try Set-Cookie header first; some CI environments expose multiple values via getSetCookie()
   let cookie = res.headers.get("set-cookie") ?? "";
-  if (!cookie && typeof (res.headers as Record<string, unknown>).getSetCookie === "function") {
+  if (!cookie && typeof (res.headers as unknown as Record<string, unknown>).getSetCookie === "function") {
     cookie = ((res.headers as unknown as { getSetCookie(): string[] }).getSetCookie()).join("; ");
   }
 
