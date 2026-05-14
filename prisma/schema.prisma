@@ -116,3 +116,29 @@ model FinancialRecord {
   date        DateTime @default(now())
   createdAt   DateTime @default(now())
 }
+
+model SushiOrder {
+  id           String           @id @default(cuid())
+  ossId        String           @unique
+  poNumber     String
+  supplierName String
+  status       Int              // 1=待下单 2=已下单 3=已确认
+  poDate       String?
+  deliveryDate String?
+  orderDate    String?
+  weekNo       Int?
+  year         Int?
+  syncedAt     DateTime         @default(now())
+  items        SushiOrderItem[]
+}
+
+model SushiOrderItem {
+  id        String     @id @default(cuid())
+  orderId   String
+  order     SushiOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  ossItemId String
+  itemCode  String
+  itemName  String
+  uom       String
+  quantity  Float
+}
