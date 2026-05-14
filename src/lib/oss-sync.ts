@@ -19,7 +19,7 @@ async function ossLogin(): Promise<string> {
   const password = process.env.OSS_PASSWORD ?? "";
   if (!username || !password) throw new Error("OSS 登录失败：OSS_USERNAME 或 OSS_PASSWORD 未配置");
 
-  const res = await fetch(`${BASE}/attemptlogin`, {
+  const res = await fetch(`${BASE}/common/login/attemptlogin`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ username, password }),
