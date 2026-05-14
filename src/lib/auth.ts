@@ -59,6 +59,14 @@ export async function requireStrictOwner(): Promise<JWTPayload> {
   return session;
 }
 
+export async function requireRoot(): Promise<JWTPayload> {
+  const session = await requireAuth();
+  if (session.username !== "root") {
+    throw new Error("权限不足");
+  }
+  return session;
+}
+
 export async function requireInvestorOrOwner(): Promise<JWTPayload> {
   const session = await requireAuth();
   if (session.role !== "OWNER" && session.role !== "MANAGER" && session.role !== "INVESTOR") {

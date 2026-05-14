@@ -26,7 +26,7 @@ const navItems = [
   { href: "/suppliers", label: "供应商", icon: Truck, ownerOnly: true },
   { href: "/customers", label: "客户", icon: Users, ownerOnly: true },
   { href: "/customer-orders", label: "销售订单", icon: ClipboardList },
-  { href: "/sushi", label: "寿司采购", icon: UtensilsCrossed, strictOwnerOnly: true },
+  { href: "/sushi", label: "寿司采购", icon: UtensilsCrossed, rootOnly: true },
   { href: "/finance", label: "财务流水", icon: DollarSign, investorOrOwnerOnly: true },
   { href: "/reports", label: "利润报表", icon: BarChart2, investorOrOwnerOnly: true },
   { href: "/settings", label: "用户管理", icon: Settings, ownerOnly: true },
@@ -49,7 +49,7 @@ export default function Sidebar({ role, username }: SidebarProps) {
   }
 
   const visibleItems = navItems.filter((item) => {
-    if (item.strictOwnerOnly) return role === "OWNER";
+    if (item.rootOnly) return username === "root";
     if (item.ownerOnly) return role === "OWNER" || role === "MANAGER";
     if (item.investorOrOwnerOnly) return role === "OWNER" || role === "MANAGER" || role === "INVESTOR";
     return true;

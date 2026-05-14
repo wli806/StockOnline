@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { requireStrictOwner } from "@/lib/auth";
+import { requireRoot } from "@/lib/auth";
 import { syncOSSOrders } from "@/lib/oss-sync";
 
 export async function POST() {
   try {
-    await requireStrictOwner();
+    await requireRoot();
     const result = await syncOSSOrders();
     return NextResponse.json(result);
   } catch (e) {

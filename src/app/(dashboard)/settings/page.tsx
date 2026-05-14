@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Users, Plus, Pencil, Trash2, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
+import { useSession } from "@/components/SessionProvider";
 
 interface User {
   id: string; username: string; role: string; createdAt: string;
@@ -10,12 +11,14 @@ interface User {
 
 const ROLE_LABEL: Record<string, string> = {
   OWNER: "所有者",
-  INVESTOR: "投资者（可见成本/利润）",
-  VIEWER: "查看者（仅基本信息）",
+  MANAGER: "管理员",
+  INVESTOR: "投资者",
+  VIEWER: "查看者",
 };
 
 const ROLE_COLOR: Record<string, string> = {
   OWNER: "bg-blue-100 text-blue-700",
+  MANAGER: "bg-indigo-100 text-indigo-700",
   INVESTOR: "bg-purple-100 text-purple-700",
   VIEWER: "bg-gray-100 text-gray-600",
 };
@@ -35,6 +38,9 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 }
 
 export default function SettingsPage() {
+  const { username } = useSession();
+  const isRoot = username === "root";
+
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -49,7 +55,7 @@ export default function SettingsPage() {
     setError("");
     const res = await fetch("/api/users");
     if (!res.ok) {
-      setError("权限不足，仅 Owner 可访问此页面");
+      setError("权限不足，仅管理员及以上可访问此页面");
       setLoading(false);
       return;
     }
@@ -99,7 +105,7 @@ export default function SettingsPage() {
   }
 
   async function handleDelete(u: User) {
-    if (u.role === "OWNER") { alert("不能删除 Owner 账户"); return; }
+    if (u.username === "root") { alert("不能删除 root 账户"); return; }
     if (!confirm(`确认删除用户 "${u.username}"？`)) return;
     await fetch(`/api/users/${u.id}`, { method: "DELETE" });
     load();
@@ -121,19 +127,24 @@ export default function SettingsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">用户管理</h1>
-          <p className="text-slate-500 text-sm mt-0.5">管理账户权限，控制各角色的可见内容</p>
+          <p className="text-slate-500 text-sm mt-0.5">
+            {isRoot ? "管理账户权限，控制各角色的可见内容" : "仅 root 账户可增删改用户"}
+          </p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-          <Plus size={16} /> 添加用户
-        </button>
+        {isRoot && (
+          <button onClick={openAdd} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+            <Plus size={16} /> 添加用户
+          </button>
+        )}
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5 text-sm text-blue-700">
         <strong>权限说明：</strong>
         <ul className="mt-1 space-y-0.5 list-disc list-inside">
-          <li><strong>所有者</strong>：可访问所有页面，含用户管理</li>
+          <li><strong>所有者</strong>：可访问除寿司采购外的所有页面（含用户列表）</li>
+          <li><strong>管理员</strong>：与所有者相同，但不可见寿司采购</li>
           <li><strong>投资者</strong>：可查看成本、资金流动和利润报表</li>
-          <li><strong>查看者</strong>：只能查看库存和商品信息</li>
+          <li><strong>查看者</strong>：只能查看库存和基本信息</li>
         </ul>
       </div>
 
@@ -156,23 +167,25 @@ export default function SettingsPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-slate-800">{u.username}</span>
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${ROLE_COLOR[u.role]}`}>
-                        {ROLE_LABEL[u.role]}
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${ROLE_COLOR[u.role] ?? "bg-slate-100 text-slate-500"}`}>
+                        {ROLE_LABEL[u.role] ?? u.role}
                       </span>
                     </div>
                     <p className="text-xs text-slate-400">加入于 {format(new Date(u.createdAt), "yyyy/MM/dd")}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => openEdit(u)} className="text-blue-500 hover:text-blue-700 p-1.5 rounded hover:bg-blue-50">
-                    <Pencil size={15} />
-                  </button>
-                  {u.role !== "OWNER" && (
-                    <button onClick={() => handleDelete(u)} className="text-red-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50">
-                      <Trash2 size={15} />
+                {isRoot && (
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => openEdit(u)} className="text-blue-500 hover:text-blue-700 p-1.5 rounded hover:bg-blue-50">
+                      <Pencil size={15} />
                     </button>
-                  )}
-                </div>
+                    {u.username !== "root" && (
+                      <button onClick={() => handleDelete(u)} className="text-red-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50">
+                        <Trash2 size={15} />
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -202,6 +215,7 @@ export default function SettingsPage() {
                 value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
                 <option value="VIEWER">查看者</option>
                 <option value="INVESTOR">投资者</option>
+                <option value="MANAGER">管理员</option>
                 <option value="OWNER">所有者</option>
               </select>
             </div>

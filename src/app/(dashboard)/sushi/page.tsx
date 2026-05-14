@@ -168,8 +168,8 @@ function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
 }
 
 export default function SushiPage() {
-  const { role } = useSession();
-  const isOwner = role === "OWNER";
+  const { username } = useSession();
+  const isRoot = username === "root";
   const [orders, setOrders] = useState<SushiOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -219,7 +219,7 @@ export default function SushiPage() {
             {lastSync && ` · 上次同步 ${format(new Date(lastSync), "MM/dd HH:mm")}`}
           </p>
         </div>
-        {isOwner && (
+        {isRoot && (
           <button onClick={handleSync} disabled={syncing}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             <RefreshCw size={15} className={syncing ? "animate-spin" : ""} />

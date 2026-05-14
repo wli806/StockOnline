@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireOwner } from "@/lib/auth";
+import { requireOwner, requireRoot } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
 export async function GET() {
@@ -19,7 +19,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireOwner();
+    await requireRoot();
     const data = await request.json();
     const hashed = await bcrypt.hash(data.password, 10);
     const user = await prisma.user.create({

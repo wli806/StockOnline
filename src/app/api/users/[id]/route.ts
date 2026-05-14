@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireOwner } from "@/lib/auth";
+import { requireRoot } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireOwner();
+    await requireRoot();
     const { id } = await params;
     const data = await request.json();
 
@@ -28,8 +28,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireOwner();
+    await requireRoot();
     const { id } = await params;
+    const user = await prisma.user.findUnique({ where: { id }, select: { username: true } });
+    if (user?.username === "root") {
+      return NextResponse.json({ error: "不能删除 root 账户" }, { status: 400 });
+    }
     await prisma.user.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (e: unknown) {
