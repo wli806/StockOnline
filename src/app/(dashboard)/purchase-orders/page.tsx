@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Plus, CheckCircle, ShoppingCart, ChevronDown, ChevronUp, Download, Trash2 } from "lucide-react";
+import CurrencyInput from "@/components/CurrencyInput";
 import { useSession } from "@/components/SessionProvider";
 import { useCurrency } from "@/components/CurrencyProvider";
 import { format } from "date-fns";
@@ -311,13 +312,17 @@ export default function PurchaseOrdersPage() {
                         {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                       </select>
                     </div>
-                    <div className="col-span-3">
+                    <div className="col-span-2">
                       <input type="number" min="1" placeholder="数量" className="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={item.quantity} onChange={(e) => updateItem(i, "quantity", e.target.value)} required />
                     </div>
-                    <div className="col-span-3">
-                      <input type="number" step="0.01" placeholder="进价$" className="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={item.unitCost} onChange={(e) => updateItem(i, "unitCost", e.target.value)} required />
+                    <div className="col-span-4">
+                      <CurrencyInput
+                        audValue={item.unitCost}
+                        onChangeAUD={(v) => updateItem(i, "unitCost", v)}
+                        placeholder="进价"
+                        required
+                      />
                     </div>
                     <div className="col-span-1 text-center">
                       {form.items.length > 1 && (
@@ -331,10 +336,12 @@ export default function PurchaseOrdersPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">运费 (AUD)</label>
-                <input type="number" step="0.01" min="0" placeholder="0.00"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={form.shippingFee} onChange={(e) => setForm({ ...form, shippingFee: e.target.value })} />
+                <label className="block text-sm font-medium text-slate-700 mb-1">运费</label>
+                <CurrencyInput
+                  audValue={form.shippingFee}
+                  onChangeAUD={(v) => setForm({ ...form, shippingFee: v })}
+                  placeholder="0.00"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">备注</label>

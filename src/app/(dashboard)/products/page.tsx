@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Package, Lock } from "lucide-react";
 import { useSession } from "@/components/SessionProvider";
-import { useCurrency } from "@/components/CurrencyProvider";
+import CurrencyInput from "@/components/CurrencyInput";
 
 interface Product {
   id: string;
@@ -38,8 +38,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 
 export default function ProductsPage() {
   const { role } = useSession();
-  const isOwner = role === "OWNER";
-  const { fmt } = useCurrency();
+  const isOwner = role === "OWNER" || role === "MANAGER";
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -102,12 +101,12 @@ export default function ProductsPage() {
     load();
   }
 
-  if (role !== "OWNER") {
+  if (role !== "OWNER" && role !== "MANAGER") {
     return (
       <div className="p-8 flex flex-col items-center justify-center min-h-[60vh] text-center">
         <Lock size={40} className="text-slate-300 mb-3" />
         <p className="text-slate-500 font-medium">无访问权限</p>
-        <p className="text-slate-400 text-sm mt-1">商品管理仅限所有者查看</p>
+        <p className="text-slate-400 text-sm mt-1">商品管理仅限所有者和管理员查看</p>
       </div>
     );
   }
@@ -143,7 +142,6 @@ export default function ProductsPage() {
               <tr className="border-b border-slate-100 text-slate-400 text-xs">
                 <th className="text-left px-6 py-3 font-medium">商品名称</th>
                 <th className="text-left px-4 py-3 font-medium">类别</th>
-                <th className="text-right px-4 py-3 font-medium">进价（成本）</th>
                 <th className="text-center px-4 py-3 font-medium">单位</th>
                 <th className="text-right px-4 py-3 font-medium">当前库存</th>
                 {isOwner && <th className="text-center px-4 py-3 font-medium">操作</th>}
@@ -158,7 +156,6 @@ export default function ProductsPage() {
                       {TYPE_LABEL[p.type] || p.type}
                     </span>
                   </td>
-                  <td className="px-4 py-3.5 text-right font-semibold text-slate-700 tabular-nums">{fmt(p.standardPrice)}</td>
                   <td className="px-4 py-3.5 text-center text-slate-500">{p.unit}</td>
                   <td className="px-4 py-3.5 text-right">
                     <span className={`font-semibold ${(p.inventoryItem?.quantity ?? 0) <= 5 ? "text-red-500" : "text-slate-700"}`}>
@@ -221,16 +218,11 @@ export default function ProductsPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">进价 / 成本价 ($) *</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={form.standardPrice}
-                onChange={(e) => setForm({ ...form, standardPrice: e.target.value })}
+              <label className="block text-sm font-medium text-slate-700 mb-1">参考进价 *</label>
+              <CurrencyInput
+                audValue={form.standardPrice}
+                onChangeAUD={(v) => setForm({ ...form, standardPrice: v })}
                 required
-                placeholder="0.00"
               />
             </div>
             <div>

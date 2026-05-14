@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Plus, ClipboardList, ChevronDown, ChevronUp, Trash2, PackageSearch, Download } from "lucide-react";
+import CurrencyInput from "@/components/CurrencyInput";
 import { useSession } from "@/components/SessionProvider";
 import { useCurrency } from "@/components/CurrencyProvider";
 import { useSearchParams } from "next/navigation";
@@ -411,12 +412,10 @@ function CustomerOrdersContent() {
                           />
                         </div>
                         <div className="col-span-3">
-                          <p className="text-xs text-slate-400 mb-1">销售价 $</p>
-                          <input
-                            type="number" step="0.01" min="0"
-                            className="w-full px-2 py-2 border border-blue-400 rounded-lg text-sm text-right font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50"
-                            value={item.salesPrice}
-                            onChange={e => updateItem(i, "salesPrice", e.target.value)}
+                          <p className="text-xs text-slate-400 mb-1">销售价</p>
+                          <CurrencyInput
+                            audValue={item.salesPrice}
+                            onChangeAUD={v => updateItem(i, "salesPrice", v)}
                             placeholder="售价"
                             required
                           />
@@ -461,12 +460,11 @@ function CustomerOrdersContent() {
                             )}
                           </div>
                           <div className="col-span-3">
-                            <p className="text-xs text-slate-400 mb-1">进价 $</p>
-                            <input
-                              type="number" step="0.01" min="0"
-                              className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs text-right bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              value={item.costPrice}
-                              onChange={e => updateItem(i, "costPrice", e.target.value)}
+                            <p className="text-xs text-slate-400 mb-1">进价</p>
+                            <CurrencyInput
+                              key={`cost-${i}-${item.batchItemId}`}
+                              audValue={item.costPrice}
+                              onChangeAUD={v => updateItem(i, "costPrice", v)}
                               placeholder="进价"
                             />
                           </div>
@@ -487,12 +485,10 @@ function CustomerOrdersContent() {
                       {!item.productId && item.productName && (
                         <div className="grid grid-cols-12 gap-2 items-center pt-1 border-t border-slate-200">
                           <div className="col-span-6">
-                            <p className="text-xs text-slate-400 mb-1">进价 $（手动填写）</p>
-                            <input
-                              type="number" step="0.01" min="0"
-                              className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-sm text-right bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              value={item.costPrice}
-                              onChange={e => updateItem(i, "costPrice", e.target.value)}
+                            <p className="text-xs text-slate-400 mb-1">进价（手动填写）</p>
+                            <CurrencyInput
+                              audValue={item.costPrice}
+                              onChangeAUD={v => updateItem(i, "costPrice", v)}
                               placeholder="0.00"
                             />
                           </div>
