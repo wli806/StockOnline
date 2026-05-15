@@ -1,5 +1,4 @@
 import { prisma } from "./prisma";
-import { applyOrderToInventory } from "./sushi-inventory-apply";
 
 const BASE = "https://oss.spientsyserv.com";
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -196,12 +195,6 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
               quantity: parseFloat(item.qty ?? "0"),
             })),
           });
-        }
-        // 自动将新进入已确认状态的订单写入库存
-        if (order.status === 3 && !dbOrder.inventoryApplied) {
-          try {
-            await applyOrderToInventory(dbOrder.id);
-          } catch { /* 写入失败不影响同步结果 */ }
         }
         synced++;
       } catch (e) {
