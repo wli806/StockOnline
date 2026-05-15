@@ -133,7 +133,7 @@ function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
       <div className="grid grid-cols-7 border-l border-slate-100">
         {cells.map((day, i) => {
           if (!day) return (
-            <div key={i} className="min-h-[96px] border-r border-b border-slate-100 bg-slate-50/60" />
+            <div key={i} className="min-h-[120px] border-r border-b border-slate-100 bg-slate-50/60" />
           );
           const key = `${cal.year}-${String(cal.month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           const events = dayMap.get(key) ?? [];
@@ -141,7 +141,7 @@ function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
           const visible = events.slice(0, MAX_VISIBLE);
           const hiddenCount = events.length - MAX_VISIBLE;
           return (
-            <div key={i} className="min-h-[96px] border-r border-b border-slate-100 p-1">
+            <div key={i} className="min-h-[120px] border-r border-b border-slate-100 p-1.5">
               <div className={`text-xs font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full mx-auto
                 ${isToday ? "bg-blue-500 text-white" : "text-slate-500"}`}>
                 {day}
@@ -153,7 +153,7 @@ function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
                     <div
                       key={ei}
                       title={`${ev.type === "order" ? "下单" : "配送"} · ${ev.supplier}`}
-                      className={`${ev.type === "order" ? colors.order : colors.delivery} text-[10px] rounded px-1.5 py-0.5 truncate leading-4 cursor-default`}
+                      className={`${ev.type === "order" ? colors.order : colors.delivery} text-xs rounded px-2 py-0.5 truncate leading-5 cursor-default`}
                     >
                       {ev.type === "order" ? "下单 " : "配送 "}{supplierShort(ev.supplier)}
                     </div>
@@ -293,11 +293,7 @@ export default function SushiOrdersPage() {
         ))}
       </div>
 
-      <div className="flex justify-center">
-        <div className="w-full max-w-xs">
-          <SushiCalendar orders={orders} />
-        </div>
-      </div>
+      <SushiCalendar orders={orders} />
 
       <div className="flex gap-2 mb-4">
         {([["all", "全部"], [1, "待下单"], [2, "已下单"], [3, "已确认"]] as [number | "all", string][]).map(([val, label]) => (
