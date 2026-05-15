@@ -25,32 +25,39 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+type Role = "OWNER" | "MANAGER" | "INVESTOR" | "VIEWER";
+
 interface ChildItem { href: string; label: string; icon: LucideIcon }
 interface NavItem {
   href: string; label: string; icon: LucideIcon;
-  ownerOnly?: boolean; investorOrOwnerOnly?: boolean; rootOnly?: boolean; strictOwnerOnly?: boolean;
+  roles: Role[];
+  rootOnly?: boolean;
   children?: ChildItem[];
 }
 
+// 所有者: 全部可见
+// 管理员: 寿司采购、用户管理、操作日志 不可见
+// 投资者: 总览、库存、财务流水、利润报表
+// 查看者: 总览、库存、商品管理、采购订单、销售订单
 const navItems: NavItem[] = [
-  { href: "/", label: "总览", icon: LayoutDashboard },
-  { href: "/products", label: "商品管理", icon: Package, ownerOnly: true },
-  { href: "/inventory", label: "库存", icon: Warehouse },
-  { href: "/purchase-orders", label: "采购订单", icon: ShoppingCart },
-  { href: "/suppliers", label: "供应商", icon: Truck, ownerOnly: true },
-  { href: "/customers", label: "客户", icon: Users, ownerOnly: true },
-  { href: "/customer-orders", label: "销售订单", icon: ClipboardList },
+  { href: "/",               label: "总览",   icon: LayoutDashboard, roles: ["OWNER", "MANAGER", "INVESTOR", "VIEWER"] },
+  { href: "/products",       label: "商品管理", icon: Package,         roles: ["OWNER", "MANAGER", "VIEWER"] },
+  { href: "/inventory",      label: "库存",   icon: Warehouse,       roles: ["OWNER", "MANAGER", "INVESTOR", "VIEWER"] },
+  { href: "/purchase-orders",label: "采购订单", icon: ShoppingCart,    roles: ["OWNER", "MANAGER", "VIEWER"] },
+  { href: "/suppliers",      label: "供应商",  icon: Truck,           roles: ["OWNER", "MANAGER"] },
+  { href: "/customers",      label: "客户",   icon: Users,           roles: ["OWNER", "MANAGER"] },
+  { href: "/customer-orders",label: "销售订单", icon: ClipboardList,   roles: ["OWNER", "MANAGER", "VIEWER"] },
   {
-    href: "/sushi", label: "寿司采购", icon: UtensilsCrossed, rootOnly: true,
+    href: "/sushi", label: "寿司采购", icon: UtensilsCrossed, roles: ["OWNER"], rootOnly: true,
     children: [
-      { href: "/sushi/orders", label: "订单管理", icon: ClipboardList },
+      { href: "/sushi/orders",    label: "订单管理", icon: ClipboardList },
       { href: "/sushi/inventory", label: "库存统计", icon: Boxes },
     ],
   },
-  { href: "/finance", label: "财务流水", icon: DollarSign, investorOrOwnerOnly: true },
-  { href: "/reports", label: "利润报表", icon: BarChart2, investorOrOwnerOnly: true },
-  { href: "/activity-log", label: "操作日志", icon: ScrollText, ownerOnly: true },
-  { href: "/settings", label: "用户管理", icon: Settings, strictOwnerOnly: true },
+  { href: "/finance",        label: "财务流水", icon: DollarSign,      roles: ["OWNER", "MANAGER", "INVESTOR"] },
+  { href: "/reports",        label: "利润报表", icon: BarChart2,       roles: ["OWNER", "MANAGER", "INVESTOR"] },
+  { href: "/activity-log",   label: "操作日志", icon: ScrollText,      roles: ["OWNER"] },
+  { href: "/settings",       label: "用户管理", icon: Settings,        roles: ["OWNER"] },
 ];
 
 interface SidebarProps {
@@ -84,11 +91,8 @@ export default function Sidebar({ role, username }: SidebarProps) {
   }
 
   const visibleItems = navItems.filter((item) => {
-    if (item.rootOnly) return username === "root";
-    if (item.strictOwnerOnly) return role === "OWNER";
-    if (item.ownerOnly) return role === "OWNER" || role === "MANAGER";
-    if (item.investorOrOwnerOnly) return role === "OWNER" || role === "MANAGER" || role === "INVESTOR";
-    return true;
+    if (item.rootOnly && username !== "root") return false;
+    return item.roles.includes(role as Role);
   });
 
   return (
