@@ -6,7 +6,6 @@ export async function applyOrderToInventory(orderId: string): Promise<void> {
     include: { items: true },
   });
 
-  if (order.status !== 3) throw new Error("只有已确认（状态3）的订单可以同步到库存");
   if (order.inventoryApplied) throw new Error("该订单已同步过库存，不可重复操作");
 
   for (const item of order.items) {
