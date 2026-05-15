@@ -129,8 +129,9 @@ model SushiOrder {
   orderDate    String?
   weekNo       Int?
   year         Int?
-  syncedAt     DateTime         @default(now())
-  items        SushiOrderItem[]
+  syncedAt         DateTime         @default(now())
+  inventoryApplied Boolean          @default(false)
+  items            SushiOrderItem[]
 }
 
 model SushiOrderItem {

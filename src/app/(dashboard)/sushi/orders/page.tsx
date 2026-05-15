@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { RefreshCw, UtensilsCrossed, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Package } from "lucide-react";
+import { RefreshCw, UtensilsCrossed, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Package, PackagePlus } from "lucide-react";
 import { useSession } from "@/components/SessionProvider";
 import { format } from "date-fns";
 
@@ -11,7 +11,8 @@ interface SushiItem {
 interface SushiOrder {
   id: string; ossId: string; poNumber: string; supplierName: string; status: number;
   poDate: string | null; deliveryDate: string | null; orderDate: string | null;
-  weekNo: number | null; year: number | null; syncedAt: string; items: SushiItem[];
+  weekNo: number | null; year: number | null; syncedAt: string;
+  inventoryApplied: boolean; items: SushiItem[];
 }
 
 const STATUS_MAP: Record<number, { label: string; cls: string }> = {
@@ -178,6 +179,8 @@ export default function SushiOrdersPage() {
   function toggleExpanded(id: string) {
     setExpanded(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
   }
+  const [applying, setApplying] = useState<string | null>(null);
+  const [applyMsg, setApplyMsg] = useState<{ id: string; ok: boolean; text: string } | null>(null);
   const [filter, setFilter] = useState<number | "all">("all");
 
   async function load() {
@@ -206,6 +209,29 @@ export default function SushiOrdersPage() {
       setSyncMsg("同步失败：网络错误");
     } finally {
       setSyncing(false);
+    }
+  }
+
+  async function handleApplyInventory(order: SushiOrder) {
+    setApplying(order.id);
+    setApplyMsg(null);
+    try {
+      const res = await fetch(`/api/sushi/orders/${order.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "apply-inventory" }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setApplyMsg({ id: order.id, ok: false, text: data.error });
+      } else {
+        setApplyMsg({ id: order.id, ok: true, text: "已成功同步到库存" });
+        load();
+      }
+    } catch {
+      setApplyMsg({ id: order.id, ok: false, text: "网络错误" });
+    } finally {
+      setApplying(null);
     }
   }
 
@@ -279,9 +305,14 @@ export default function SushiOrdersPage() {
             <div key={order.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
               <div className="flex items-center justify-between px-6 py-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
+                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                     <span className="font-semibold text-slate-800">{order.supplierName || "未知供应商"}</span>
                     <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${st.cls}`}>{st.label}</span>
+                    {order.status === 3 && (
+                      order.inventoryApplied
+                        ? <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700">已入库</span>
+                        : <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-600">待入库</span>
+                    )}
                   </div>
                   <p className="text-slate-400 text-xs">
                     {order.poNumber && `PO# ${order.poNumber}`}
@@ -291,6 +322,17 @@ export default function SushiOrdersPage() {
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0 ml-4">
                   <span className="text-sm text-slate-500">{order.items.length} 件商品</span>
+                  {isRoot && order.status === 3 && !order.inventoryApplied && (
+                    <button
+                      onClick={() => handleApplyInventory(order)}
+                      disabled={applying === order.id}
+                      title="同步到库存"
+                      className="flex items-center gap-1 px-2 py-1 bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400 text-white rounded-lg text-xs font-medium transition-colors"
+                    >
+                      <PackagePlus size={13} />
+                      {applying === order.id ? "同步中..." : "入库"}
+                    </button>
+                  )}
                   <button onClick={() => toggleExpanded(order.id)}
                     className="text-slate-400 hover:text-slate-600">
                     {expanded.has(order.id) ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -298,6 +340,11 @@ export default function SushiOrdersPage() {
                 </div>
               </div>
 
+              {applyMsg?.id === order.id && (
+                <div className={`px-6 py-2 text-xs ${applyMsg.ok ? "bg-teal-50 text-teal-700" : "bg-red-50 text-red-600"}`}>
+                  {applyMsg.text}
+                </div>
+              )}
               {expanded.has(order.id) && (
                 order.items.length === 0 ? (
                   <div className="border-t border-slate-100 px-6 py-3 bg-slate-50/50 text-center text-sm text-slate-400">
