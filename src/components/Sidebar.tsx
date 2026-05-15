@@ -21,13 +21,14 @@ import {
   ChevronDown,
   Menu,
   X,
+  ScrollText,
   type LucideIcon,
 } from "lucide-react";
 
 interface ChildItem { href: string; label: string; icon: LucideIcon }
 interface NavItem {
   href: string; label: string; icon: LucideIcon;
-  ownerOnly?: boolean; investorOrOwnerOnly?: boolean; rootOnly?: boolean;
+  ownerOnly?: boolean; investorOrOwnerOnly?: boolean; rootOnly?: boolean; strictOwnerOnly?: boolean;
   children?: ChildItem[];
 }
 
@@ -48,7 +49,8 @@ const navItems: NavItem[] = [
   },
   { href: "/finance", label: "财务流水", icon: DollarSign, investorOrOwnerOnly: true },
   { href: "/reports", label: "利润报表", icon: BarChart2, investorOrOwnerOnly: true },
-  { href: "/settings", label: "用户管理", icon: Settings, ownerOnly: true },
+  { href: "/activity-log", label: "操作日志", icon: ScrollText, ownerOnly: true },
+  { href: "/settings", label: "用户管理", icon: Settings, strictOwnerOnly: true },
 ];
 
 interface SidebarProps {
@@ -83,6 +85,7 @@ export default function Sidebar({ role, username }: SidebarProps) {
 
   const visibleItems = navItems.filter((item) => {
     if (item.rootOnly) return username === "root";
+    if (item.strictOwnerOnly) return role === "OWNER";
     if (item.ownerOnly) return role === "OWNER" || role === "MANAGER";
     if (item.investorOrOwnerOnly) return role === "OWNER" || role === "MANAGER" || role === "INVESTOR";
     return true;

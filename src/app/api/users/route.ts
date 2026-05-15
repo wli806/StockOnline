@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireOwner, requireRoot } from "@/lib/auth";
+import { requireStrictOwner, requireRoot } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
 export async function GET() {
   try {
-    await requireOwner();
+    await requireStrictOwner();
     const users = await prisma.user.findMany({
       select: { id: true, username: true, role: true, createdAt: true },
       orderBy: { createdAt: "asc" },

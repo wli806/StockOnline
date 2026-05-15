@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireOwner } from "@/lib/auth";
+import { logActivity } from "@/lib/activity-log";
 
 export async function GET() {
   try {
@@ -21,7 +22,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireOwner();
+    const session = await requireOwner();
     const data = await request.json();
     const order = await prisma.purchaseOrder.create({
       data: {
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
         items: { include: { product: true } },
       },
     });
+    logActivity(session.username, "创建采购订单", `单号: ${order.supplierOrderNo}`);
     return NextResponse.json(order, { status: 201 });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "服务器错误";

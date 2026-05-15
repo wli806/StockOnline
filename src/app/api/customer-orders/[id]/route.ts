@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireOwner } from "@/lib/auth";
+import { logActivity } from "@/lib/activity-log";
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -20,7 +21,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireOwner();
+    const session = await requireOwner();
     const { id } = await params;
     const data = await request.json();
 
@@ -28,7 +29,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       const order = await prisma.customerOrder.update({
         where: { id },
         data: { status: data.status },
+        include: { customer: true },
       });
+      logActivity(session.username, "更新销售订单状态", `客户: ${order.customer.name}, 状态: ${data.status}`);
       return NextResponse.json(order);
     }
 
@@ -41,9 +44,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireOwner();
+    const session = await requireOwner();
     const { id } = await params;
+    const order = await prisma.customerOrder.findUnique({ where: { id }, include: { customer: true } });
     await prisma.customerOrder.delete({ where: { id } });
+    logActivity(session.username, "删除销售订单", `客户: ${order?.customer.name ?? id}`);
     return NextResponse.json({ success: true });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "服务器错误";

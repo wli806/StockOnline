@@ -145,6 +145,14 @@ model SushiOrderItem {
   quantity  Float
 }
 
+model ActivityLog {
+  id        String   @id @default(cuid())
+  username  String
+  action    String
+  detail    String?
+  createdAt DateTime @default(now())
+}
+
 model SushiInventoryItem {
   id        String   @id @default(cuid())
   name      String
