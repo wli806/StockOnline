@@ -308,11 +308,13 @@ export default function SushiOrdersPage() {
                   <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                     <span className="font-semibold text-slate-800">{order.supplierName || "未知供应商"}</span>
                     <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${st.cls}`}>{st.label}</span>
-                    {order.status === 3 && (
-                      order.inventoryApplied
-                        ? <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700">已入库</span>
-                        : <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-600">待入库</span>
-                    )}
+                    {(() => {
+                      const deliveryYMD = order.deliveryDate ? parseToYMD(order.deliveryDate) : null;
+                      const todayYMD = new Date().toISOString().slice(0, 10);
+                      if (order.inventoryApplied) return <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700">已入库</span>;
+                      if (deliveryYMD && deliveryYMD <= todayYMD) return <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-600">待入库</span>;
+                      return null;
+                    })()}
                   </div>
                   <p className="text-slate-400 text-xs">
                     {order.poNumber && `PO# ${order.poNumber}`}
@@ -322,7 +324,7 @@ export default function SushiOrdersPage() {
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0 ml-4">
                   <span className="text-sm text-slate-500">{order.items.length} 件商品</span>
-                  {isRoot && order.status === 3 && !order.inventoryApplied && (
+                  {isRoot && !order.inventoryApplied && (() => { const d = order.deliveryDate ? parseToYMD(order.deliveryDate) : null; return d && d <= new Date().toISOString().slice(0,10); })() && (
                     <button
                       onClick={() => handleApplyInventory(order)}
                       disabled={applying === order.id}

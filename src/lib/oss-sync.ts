@@ -1,6 +1,22 @@
 import { prisma } from "./prisma";
+import { applyOrderToInventory } from "./sushi-inventory-apply";
 
 const BASE = "https://oss.spientsyserv.com";
+const MONTH_ABBR: Record<string, string> = {
+  jan:"01",feb:"02",mar:"03",apr:"04",may:"05",jun:"06",
+  jul:"07",aug:"08",sep:"09",oct:"10",nov:"11",dec:"12",
+};
+
+function parseDeliveryDate(s: string): string | null {
+  if (!s) return null;
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  const dmy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (dmy) return `${dmy[3]}-${dmy[2].padStart(2,"0")}-${dmy[1].padStart(2,"0")}`;
+  const dm = s.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})/);
+  if (dm) { const m = MONTH_ABBR[dm[2].toLowerCase()]; if (m) return `${dm[3]}-${m}-${dm[1].padStart(2,"0")}`; }
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+}
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 function ossDateFmt(d: Date): string {
@@ -195,6 +211,14 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
               quantity: parseFloat(item.qty ?? "0"),
             })),
           });
+        }
+        // 配送日 ≤ 今天且未入库 → 自动入库
+        if (!dbOrder.inventoryApplied) {
+          const deliveryYMD = parseDeliveryDate(order.deliveryDate ?? "");
+          const todayYMD = new Date().toISOString().slice(0, 10);
+          if (deliveryYMD && deliveryYMD <= todayYMD) {
+            try { await applyOrderToInventory(dbOrder.id); } catch { /* 不影响同步 */ }
+          }
         }
         synced++;
       } catch (e) {
