@@ -37,16 +37,16 @@ interface NavItem {
 
 // 所有者: 全部可见
 // 管理员: 寿司采购、用户管理、操作日志 不可见
-// 投资者: 总览、库存、财务流水、利润报表
+// 投资者: 销售订单、财务流水、利润报表
 // 查看者: 总览、库存、商品管理、采购订单、销售订单
 const navItems: NavItem[] = [
-  { href: "/",               label: "总览",   icon: LayoutDashboard, roles: ["OWNER", "MANAGER", "INVESTOR", "VIEWER"] },
+  { href: "/",               label: "总览",   icon: LayoutDashboard, roles: ["OWNER", "MANAGER", "VIEWER"] },
   { href: "/products",       label: "商品管理", icon: Package,         roles: ["OWNER", "MANAGER", "VIEWER"] },
-  { href: "/inventory",      label: "库存",   icon: Warehouse,       roles: ["OWNER", "MANAGER", "INVESTOR", "VIEWER"] },
+  { href: "/inventory",      label: "库存",   icon: Warehouse,       roles: ["OWNER", "MANAGER", "VIEWER"] },
   { href: "/purchase-orders",label: "采购订单", icon: ShoppingCart,    roles: ["OWNER", "MANAGER", "VIEWER"] },
   { href: "/suppliers",      label: "供应商",  icon: Truck,           roles: ["OWNER", "MANAGER"] },
   { href: "/customers",      label: "客户",   icon: Users,           roles: ["OWNER", "MANAGER"] },
-  { href: "/customer-orders",label: "销售订单", icon: ClipboardList,   roles: ["OWNER", "MANAGER", "VIEWER"] },
+  { href: "/customer-orders",label: "销售订单", icon: ClipboardList,   roles: ["OWNER", "MANAGER", "INVESTOR", "VIEWER"] },
   {
     href: "/sushi", label: "寿司采购", icon: UtensilsCrossed, roles: ["OWNER"], rootOnly: true,
     children: [
@@ -55,7 +55,7 @@ const navItems: NavItem[] = [
     ],
   },
   { href: "/finance",        label: "财务流水", icon: DollarSign,      roles: ["OWNER", "MANAGER", "INVESTOR"] },
-  { href: "/reports",        label: "利润报表", icon: BarChart2,       roles: ["OWNER", "MANAGER", "INVESTOR"] },
+  { href: "/reports",        label: "利润报表", icon: BarChart2,        roles: ["OWNER", "MANAGER", "INVESTOR"] },
   { href: "/activity-log",   label: "操作日志", icon: ScrollText,      roles: ["OWNER"] },
   { href: "/settings",       label: "用户管理", icon: Settings,        roles: ["OWNER"] },
 ];
