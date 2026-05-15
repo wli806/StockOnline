@@ -71,6 +71,7 @@ interface RawOrder {
 }
 
 function parseNormalOrders(tbody: string, weekNo: number, year: number): RawOrder[] {
+  const DATE_RE = /\b(\d{1,2}-[A-Za-z]{3}-\d{4}|\d{1,2}\/\d{1,2}\/\d{4})\b/;
   const orders: RawOrder[] = [];
   const rows = tbody.split(/<\/tr>/i);
   for (const row of rows) {
@@ -82,7 +83,21 @@ function parseNormalOrders(tbody: string, weekNo: number, year: number): RawOrde
     const poNumber = tdTexts[6] ?? "";
     const supplierRaw = tdTexts[2] ?? "";
     const supplier = supplierRaw.replace(/^[A-Z]\s+/, "").trim();
-    orders.push({ id, poNumber, supplier, status: 2, poDate: "", deliveryDate: null, orderDate: "", weekNo, year });
+
+    // 扫描所有单元格提取日期（去重，顺序保留）
+    const dates: string[] = [];
+    for (const t of tdTexts) {
+      const m = t.match(DATE_RE);
+      if (m && !dates.includes(m[1])) dates.push(m[1]);
+    }
+
+    orders.push({
+      id, poNumber, supplier, status: 2,
+      poDate: dates[0] ?? "",
+      orderDate: dates[0] ?? "",
+      deliveryDate: dates[1] ?? null,
+      weekNo, year,
+    });
   }
   return orders;
 }
