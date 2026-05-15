@@ -191,9 +191,9 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
             method: "POST", headers,
             body: new URLSearchParams({ headerid: order.id }),
           }),
-          // Normal 订单需请求详情页拿 Delivery Date（使用完整路径如 editorder/339372/7）
+          // Normal 订单需请求详情页拿 Delivery Date（路径相对于 /shop/ 而非 /shop/home/）
           order.deliveryDate === null && order.editPath
-            ? fetch(`${BASE}/shop/home/${order.editPath}`, { headers: { Cookie: `ci_session=${session}` } })
+            ? fetch(`${BASE}/shop/${order.editPath}`, { headers: { Cookie: `ci_session=${session}` } })
             : (order.deliveryDate === null && !order.editPath
                 ? (debug.push(`[${order.supplier}] id=${order.id} editPath=null (href regex missed)`), Promise.resolve(null))
                 : Promise.resolve(null)),
@@ -219,8 +219,7 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
           }
           if (dates.length >= 2) deliveryDate = dates[1];
           else if (dates.length === 1) deliveryDate = dates[0];
-          debug.push(`[${order.supplier}] editPath=${order.editPath} status=${detailRes.status} htmlLen=${html.length} dates=${JSON.stringify(dates)} → deliveryDate=${deliveryDate ?? "null"}`);
-          void editUrl;
+          debug.push(`[${order.supplier}] url=/shop/${order.editPath} status=${detailRes.status} htmlLen=${html.length} dates=${JSON.stringify(dates)} → deliveryDate=${deliveryDate ?? "null"}`);
         }
 
         return { order: { ...order, deliveryDate }, items };
