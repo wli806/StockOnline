@@ -174,7 +174,10 @@ export default function SushiOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState("");
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  function toggleExpanded(id: string) {
+    setExpanded(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+  }
   const [filter, setFilter] = useState<number | "all">("all");
 
   async function load() {
@@ -288,14 +291,14 @@ export default function SushiOrdersPage() {
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0 ml-4">
                   <span className="text-sm text-slate-500">{order.items.length} 件商品</span>
-                  <button onClick={() => setExpanded(expanded === order.id ? null : order.id)}
+                  <button onClick={() => toggleExpanded(order.id)}
                     className="text-slate-400 hover:text-slate-600">
-                    {expanded === order.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    {expanded.has(order.id) ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                   </button>
                 </div>
               </div>
 
-              {expanded === order.id && (
+              {expanded.has(order.id) && (
                 order.items.length === 0 ? (
                   <div className="border-t border-slate-100 px-6 py-3 bg-slate-50/50 text-center text-sm text-slate-400">
                     <Package size={14} className="inline mr-1" />暂无商品明细

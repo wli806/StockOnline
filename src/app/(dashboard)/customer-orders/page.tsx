@@ -81,7 +81,10 @@ function CustomerOrdersContent() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  function toggleExpanded(id: string) {
+    setExpanded(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+  }
 
   const [form, setForm] = useState({
     customerAddress: customerAddressFilter,
@@ -290,12 +293,12 @@ function CustomerOrdersContent() {
                     <Trash2 size={15} />
                   </button>
                 )}
-                <button onClick={() => setExpanded(expanded === order.id ? null : order.id)} className="text-slate-400 hover:text-slate-600">
-                  {expanded === order.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                <button onClick={() => toggleExpanded(order.id)} className="text-slate-400 hover:text-slate-600">
+                  {expanded.has(order.id) ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                 </button>
               </div>
             </div>
-            {expanded === order.id && (
+            {expanded.has(order.id) && (
               <div className="border-t border-slate-100 px-6 py-4 bg-slate-50/50">
                 <table className="w-full text-sm">
                   <thead>
