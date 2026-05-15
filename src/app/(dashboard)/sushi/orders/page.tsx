@@ -42,26 +42,33 @@ function parseToYMD(s: string): string | null {
   return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
 }
 
-interface DayEvent { type: "order" | "delivery"; supplier: string; }
+interface DayEvent { type: "order" | "delivery"; supplier: string; relatedDates: string[]; }
 
 const CAL_PALETTE = [
-  { order: "bg-blue-100 text-blue-700", delivery: "bg-blue-500 text-white", dot: "bg-blue-500" },
-  { order: "bg-emerald-100 text-emerald-700", delivery: "bg-emerald-500 text-white", dot: "bg-emerald-500" },
-  { order: "bg-violet-100 text-violet-700", delivery: "bg-violet-500 text-white", dot: "bg-violet-500" },
-  { order: "bg-rose-100 text-rose-700", delivery: "bg-rose-500 text-white", dot: "bg-rose-500" },
-  { order: "bg-amber-100 text-amber-700", delivery: "bg-amber-500 text-white", dot: "bg-amber-500" },
-  { order: "bg-teal-100 text-teal-700", delivery: "bg-teal-500 text-white", dot: "bg-teal-500" },
-  { order: "bg-indigo-100 text-indigo-700", delivery: "bg-indigo-500 text-white", dot: "bg-indigo-500" },
-  { order: "bg-orange-100 text-orange-700", delivery: "bg-orange-500 text-white", dot: "bg-orange-500" },
+  { order: "bg-blue-100 text-blue-700", delivery: "bg-blue-500 text-white", ring: "ring-blue-500", dot: "bg-blue-500" },
+  { order: "bg-emerald-100 text-emerald-700", delivery: "bg-emerald-500 text-white", ring: "ring-emerald-500", dot: "bg-emerald-500" },
+  { order: "bg-violet-100 text-violet-700", delivery: "bg-violet-500 text-white", ring: "ring-violet-500", dot: "bg-violet-500" },
+  { order: "bg-rose-100 text-rose-700", delivery: "bg-rose-500 text-white", ring: "ring-rose-500", dot: "bg-rose-500" },
+  { order: "bg-amber-100 text-amber-700", delivery: "bg-amber-500 text-white", ring: "ring-amber-500", dot: "bg-amber-500" },
+  { order: "bg-teal-100 text-teal-700", delivery: "bg-teal-500 text-white", ring: "ring-teal-500", dot: "bg-teal-500" },
+  { order: "bg-indigo-100 text-indigo-700", delivery: "bg-indigo-500 text-white", ring: "ring-indigo-500", dot: "bg-indigo-500" },
+  { order: "bg-orange-100 text-orange-700", delivery: "bg-orange-500 text-white", ring: "ring-orange-500", dot: "bg-orange-500" },
 ];
 
 function supplierShort(name: string): string {
   return name.split(/[\s\-\[]/)[0].slice(0, 9);
 }
 
+function fmtYMD(ymd: string): string {
+  const [, m, d] = ymd.split("-");
+  return `${parseInt(m)}月${parseInt(d)}日`;
+}
+
 function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
   const now = new Date();
   const [cal, setCal] = useState({ year: now.getFullYear(), month: now.getMonth() });
+  const [hoveredSupplier, setHoveredSupplier] = useState<string | null>(null);
+  const [expandedCells, setExpandedCells] = useState<Set<string>>(new Set());
 
   const supplierColorMap = useMemo(() => {
     const unique = [...new Set(orders.map(o => o.supplierName || "未知"))];
@@ -74,18 +81,16 @@ function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
     const map = new Map<string, DayEvent[]>();
     for (const o of orders) {
       const supplier = o.supplierName || "未知供应商";
-      const add = (dateStr: string | null, type: "order" | "delivery") => {
-        if (!dateStr) return;
-        const k = parseToYMD(dateStr);
-        if (!k) return;
+      const orderYMD = o.orderDate ? parseToYMD(o.orderDate) : null;
+      const deliveryYMD = o.deliveryDate ? parseToYMD(o.deliveryDate) : null;
+      const upsert = (k: string, type: "order" | "delivery", related: string | null) => {
         const evs = map.get(k) ?? [];
-        if (!evs.some(e => e.type === type && e.supplier === supplier)) {
-          evs.push({ type, supplier });
-          map.set(k, evs);
-        }
+        let ev = evs.find(e => e.type === type && e.supplier === supplier);
+        if (!ev) { ev = { type, supplier, relatedDates: [] }; evs.push(ev); map.set(k, evs); }
+        if (related && !ev.relatedDates.includes(related)) ev.relatedDates.push(related);
       };
-      add(o.orderDate, "order");
-      add(o.deliveryDate, "delivery");
+      if (orderYMD) upsert(orderYMD, "order", deliveryYMD);
+      if (deliveryYMD) upsert(deliveryYMD, "delivery", orderYMD);
     }
     return map;
   }, [orders]);
@@ -104,22 +109,18 @@ function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
   const MAX_VISIBLE = 3;
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm mb-6 overflow-hidden">
+    <div className="bg-white rounded-xl border border-slate-100 shadow-sm mb-6">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 rounded-t-xl">
         <button
           onClick={() => setCal(c => { const d = new Date(c.year, c.month - 1); return { year: d.getFullYear(), month: d.getMonth() }; })}
           className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-        >
-          <ChevronLeft size={16} />
-        </button>
+        ><ChevronLeft size={16} /></button>
         <span className="font-semibold text-slate-700">{cal.year}年 {MONTH_NAMES[cal.month]}</span>
         <button
           onClick={() => setCal(c => { const d = new Date(c.year, c.month + 1); return { year: d.getFullYear(), month: d.getMonth() }; })}
           className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-        >
-          <ChevronRight size={16} />
-        </button>
+        ><ChevronRight size={16} /></button>
       </div>
 
       {/* DOW headers */}
@@ -132,16 +133,15 @@ function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
       {/* Calendar grid */}
       <div className="grid grid-cols-7 border-l border-slate-100">
         {cells.map((day, i) => {
-          if (!day) return (
-            <div key={i} className="min-h-[120px] border-r border-b border-slate-100 bg-slate-50/60" />
-          );
+          if (!day) return <div key={i} className="min-h-[120px] border-r border-b border-slate-100 bg-slate-50/60" />;
           const key = `${cal.year}-${String(cal.month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           const events = dayMap.get(key) ?? [];
           const isToday = key === todayKey;
-          const visible = events.slice(0, MAX_VISIBLE);
+          const isExpanded = expandedCells.has(key);
+          const visible = isExpanded ? events : events.slice(0, MAX_VISIBLE);
           const hiddenCount = events.length - MAX_VISIBLE;
           return (
-            <div key={i} className="min-h-[120px] border-r border-b border-slate-100 p-1.5">
+            <div key={i} className="relative min-h-[120px] border-r border-b border-slate-100 p-1.5">
               <div className={`text-xs font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full mx-auto
                 ${isToday ? "bg-blue-500 text-white" : "text-slate-500"}`}>
                 {day}
@@ -149,18 +149,52 @@ function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
               <div className="space-y-0.5">
                 {visible.map((ev, ei) => {
                   const colors = supplierColorMap.get(ev.supplier) ?? CAL_PALETTE[0];
+                  const isActive = hoveredSupplier === ev.supplier;
+                  const isDimmed = hoveredSupplier !== null && !isActive;
+                  const tooltipText = ev.type === "order"
+                    ? (ev.relatedDates.length > 0 ? `预计配送: ${ev.relatedDates.map(fmtYMD).join("、")}` : "暂无配送日期")
+                    : (ev.relatedDates.length > 0 ? `下单日: ${ev.relatedDates.map(fmtYMD).join("、")}` : "暂无下单日期");
                   return (
                     <div
                       key={ei}
-                      title={`${ev.type === "order" ? "下单" : "配送"} · ${ev.supplier}`}
-                      className={`${ev.type === "order" ? colors.order : colors.delivery} text-xs rounded px-2 py-0.5 truncate leading-5 cursor-default`}
+                      className="relative group/chip"
+                      onMouseEnter={() => setHoveredSupplier(ev.supplier)}
+                      onMouseLeave={() => setHoveredSupplier(null)}
                     >
-                      {ev.type === "order" ? "下单 " : "配送 "}{supplierShort(ev.supplier)}
+                      <div className={[
+                        ev.type === "order" ? colors.order : colors.delivery,
+                        "text-xs rounded px-2 py-0.5 truncate leading-5 cursor-default transition-all duration-100",
+                        isActive ? `ring-2 ring-offset-1 ${colors.ring} shadow-md font-semibold` : "",
+                        isDimmed ? "opacity-20" : "",
+                      ].join(" ")}>
+                        {ev.type === "order" ? "下单 " : "配送 "}{supplierShort(ev.supplier)}
+                      </div>
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-0 mb-1 z-50 hidden group-hover/chip:block pointer-events-none">
+                        <div className="bg-slate-800 text-white rounded-lg px-3 py-2 shadow-xl text-[11px] leading-5 min-w-max max-w-[220px]">
+                          <div className="font-semibold truncate">{ev.supplier}</div>
+                          <div className="text-slate-300">{tooltipText}</div>
+                        </div>
+                        <div className="w-2 h-2 bg-slate-800 rotate-45 ml-3 -mt-1" />
+                      </div>
                     </div>
                   );
                 })}
-                {hiddenCount > 0 && (
-                  <div className="text-[10px] text-slate-400 px-1">+{hiddenCount} 更多</div>
+                {!isExpanded && hiddenCount > 0 && (
+                  <button
+                    onClick={() => setExpandedCells(p => { const s = new Set(p); s.add(key); return s; })}
+                    className="text-[11px] text-blue-500 hover:text-blue-700 hover:underline px-1 w-full text-left transition-colors"
+                  >
+                    +{hiddenCount} 更多…
+                  </button>
+                )}
+                {isExpanded && events.length > MAX_VISIBLE && (
+                  <button
+                    onClick={() => setExpandedCells(p => { const s = new Set(p); s.delete(key); return s; })}
+                    className="text-[11px] text-slate-400 hover:text-slate-600 px-1 w-full text-left transition-colors"
+                  >
+                    收起
+                  </button>
                 )}
               </div>
             </div>
@@ -169,16 +203,14 @@ function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-5 py-3 border-t border-slate-100">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-5 py-3 border-t border-slate-100 rounded-b-xl">
         {[...supplierColorMap.entries()].map(([supplier, colors]) => (
           <div key={supplier} className="flex items-center gap-1.5 text-xs text-slate-500">
             <span className={`w-2.5 h-2.5 rounded-sm flex-shrink-0 ${colors.dot}`} />
             {supplierShort(supplier)}
           </div>
         ))}
-        <div className="ml-auto flex items-center gap-3 text-xs text-slate-400">
-          <span>浅色 = 下单日 &nbsp; 深色 = 配送日</span>
-        </div>
+        <div className="ml-auto text-xs text-slate-400">浅色 = 下单 · 深色 = 配送 · 悬浮高亮同供应商</div>
       </div>
     </div>
   );
