@@ -18,7 +18,6 @@ import {
   LogOut,
   UtensilsCrossed,
   Boxes,
-  ClipboardList,
   ChevronDown,
   type LucideIcon,
 } from "lucide-react";
