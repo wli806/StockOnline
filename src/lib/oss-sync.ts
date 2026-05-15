@@ -73,6 +73,7 @@ interface RawOrder {
   orderDate: string;
   weekNo: number;
   year: number;
+  editPath: string | null;
 }
 
 // 将 "11-May-26" 或 "11-May-2026" 统一转成 "11-May-2026"
@@ -86,9 +87,12 @@ function parseNormalOrders(tbody: string, weekNo: number, year: number): RawOrde
   const orders: RawOrder[] = [];
   const rows = tbody.split(/<\/tr>/i);
   for (const row of rows) {
-    const idMatch = row.match(/editorder\/(\d+)/);
-    if (!idMatch) continue;
-    const id = idMatch[1];
+    // Capture full path: editorder/{ossId}/{weekNo}
+    const hrefMatch = row.match(/href=["']([^"']*editorder\/(\d+)(?:\/(\d+))?)[^"']*["']/i);
+    if (!hrefMatch) continue;
+    const id = hrefMatch[2];
+    const editPath = hrefMatch[1].replace(/^.*?(editorder\/.+)$/, "$1").split("?")[0];
+
     const tdTexts = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)]
       .map(m => m[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim());
     const poNumber = tdTexts[6] ?? "";
@@ -103,14 +107,15 @@ function parseNormalOrders(tbody: string, weekNo: number, year: number): RawOrde
       id, poNumber, supplier, status: 2,
       poDate: orderDate,
       orderDate,
-      deliveryDate: null, // Normal 列表无此列，由 fetchNormalDeliveryDate 补充
+      deliveryDate: null, // Normal 列表无此列，由编辑页补充
       weekNo, year,
+      editPath,
     });
   }
   return orders;
 }
 
-export async function syncOSSOrders(): Promise<{ synced: number; errors: string[] }> {
+export async function syncOSSOrders(): Promise<{ synced: number; errors: string[]; debug: string[] }> {
   const session = await ossLogin();
   const now = new Date();
   const weekNo = getFiscalWeek(now);
@@ -161,6 +166,7 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
       orderDate: o.order_date,
       weekNo: parseInt(o.week_no),
       year: parseInt(o.year),
+      editPath: null,
     }));
 
   const tbody: string = listData.tbody ?? "";
@@ -169,6 +175,7 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
   const allOrders = [...dailyOrders, ...normalOrders.filter(o => !dailyIds.has(o.id))];
 
   const errors: string[] = [];
+  const debug: string[] = [];
   let synced = 0;
 
   for (let i = 0; i < allOrders.length; i += 5) {
@@ -184,10 +191,12 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
             method: "POST", headers,
             body: new URLSearchParams({ headerid: order.id }),
           }),
-          // Normal 订单需请求详情页拿 Delivery Date
-          order.deliveryDate === null
-            ? fetch(`${BASE}/shop/home/editorder/${order.id}`, { headers: { Cookie: `ci_session=${session}` } })
-            : Promise.resolve(null),
+          // Normal 订单需请求详情页拿 Delivery Date（使用完整路径如 editorder/339372/7）
+          order.deliveryDate === null && order.editPath
+            ? fetch(`${BASE}/shop/home/${order.editPath}`, { headers: { Cookie: `ci_session=${session}` } })
+            : (order.deliveryDate === null && !order.editPath
+                ? (debug.push(`[${order.supplier}] id=${order.id} editPath=null (href regex missed)`), Promise.resolve(null))
+                : Promise.resolve(null)),
         ]);
 
         const text = await itemsRes.text();
@@ -198,9 +207,9 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
         } catch { items = []; }
 
         // 从编辑页 HTML 中提取 Delivery Date
-        // 扫描整个 HTML，找所有日期格式字符串（去重），第1个=PO Date，第2个=Delivery Date
         let deliveryDate = order.deliveryDate;
         if (detailRes) {
+          const editUrl = `${BASE}/shop/home/${order.editPath}`;
           const html = await detailRes.text();
           const seen = new Set<string>();
           const dates: string[] = [];
@@ -210,6 +219,8 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
           }
           if (dates.length >= 2) deliveryDate = dates[1];
           else if (dates.length === 1) deliveryDate = dates[0];
+          debug.push(`[${order.supplier}] editPath=${order.editPath} status=${detailRes.status} htmlLen=${html.length} dates=${JSON.stringify(dates)} → deliveryDate=${deliveryDate ?? "null"}`);
+          void editUrl;
         }
 
         return { order: { ...order, deliveryDate }, items };
@@ -273,5 +284,5 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
     }
   }
 
-  return { synced, errors };
+  return { synced, errors, debug };
 }
