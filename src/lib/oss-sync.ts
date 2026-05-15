@@ -12,8 +12,13 @@ function parseDeliveryDate(s: string): string | null {
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
   const dmy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if (dmy) return `${dmy[3]}-${dmy[2].padStart(2,"0")}-${dmy[1].padStart(2,"0")}`;
-  const dm = s.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})/);
-  if (dm) { const m = MONTH_ABBR[dm[2].toLowerCase()]; if (m) return `${dm[3]}-${m}-${dm[1].padStart(2,"0")}`; }
+  // 支持两位或四位年份: "14-May-26" 或 "14-May-2026"
+  const dm = s.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2,4})/);
+  if (dm) {
+    const m = MONTH_ABBR[dm[2].toLowerCase()];
+    const y = dm[3].length === 2 ? `20${dm[3]}` : dm[3];
+    if (m) return `${y}-${m}-${dm[1].padStart(2,"0")}`;
+  }
   const d = new Date(s);
   return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
 }
@@ -70,8 +75,14 @@ interface RawOrder {
   year: number;
 }
 
+// 将 "11-May-26" 或 "11-May-2026" 统一转成 "11-May-2026"
+function normalizeShortYear(s: string): string {
+  return s.replace(/-(\d{2})$/, (_, y) => `-20${y}`);
+}
+
 function parseNormalOrders(tbody: string, weekNo: number, year: number): RawOrder[] {
-  const DATE_RE = /\b(\d{1,2}-[A-Za-z]{3}-\d{4}|\d{1,2}\/\d{1,2}\/\d{4})\b/;
+  // 匹配两位或四位年份的日期，如 "11-May-26" 或 "11-May-2026"
+  const DATE_RE = /\b(\d{1,2}-[A-Za-z]{3}-(?:\d{2}|\d{4}))\b/;
   const orders: RawOrder[] = [];
   const rows = tbody.split(/<\/tr>/i);
   for (const row of rows) {
@@ -84,18 +95,15 @@ function parseNormalOrders(tbody: string, weekNo: number, year: number): RawOrde
     const supplierRaw = tdTexts[2] ?? "";
     const supplier = supplierRaw.replace(/^[A-Z]\s+/, "").trim();
 
-    // 扫描所有单元格提取日期（去重，顺序保留）
-    const dates: string[] = [];
-    for (const t of tdTexts) {
-      const m = t.match(DATE_RE);
-      if (m && !dates.includes(m[1])) dates.push(m[1]);
-    }
+    // td[0] = ORDER TIME（下单时间），td[1] = PO TIME（截止时间）
+    const orderDateRaw = (tdTexts[0] ?? "").match(DATE_RE)?.[1] ?? "";
+    const orderDate = orderDateRaw ? normalizeShortYear(orderDateRaw) : "";
 
     orders.push({
       id, poNumber, supplier, status: 2,
-      poDate: dates[0] ?? "",
-      orderDate: dates[0] ?? "",
-      deliveryDate: dates[1] ?? null,
+      poDate: orderDate,
+      orderDate,
+      deliveryDate: null, // Normal 列表无此列，由 fetchNormalDeliveryDate 补充
       weekNo, year,
     });
   }
@@ -167,21 +175,37 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
     const batch = allOrders.slice(i, i + 5);
     const results = await Promise.allSettled(
       batch.map(async (order) => {
-        const r = await fetch(`${BASE}/shop/home/getExistingItems`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Cookie": `ci_session=${session}`,
-          },
-          body: new URLSearchParams({ headerid: order.id }),
-        });
-        const text = await r.text();
+        const headers = {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Cookie": `ci_session=${session}`,
+        };
+        const [itemsRes, detailRes] = await Promise.all([
+          fetch(`${BASE}/shop/home/getExistingItems`, {
+            method: "POST", headers,
+            body: new URLSearchParams({ headerid: order.id }),
+          }),
+          // Normal 订单需请求详情页拿 Delivery Date
+          order.deliveryDate === null
+            ? fetch(`${BASE}/shop/home/editorder/${order.id}`, { headers: { Cookie: `ci_session=${session}` } })
+            : Promise.resolve(null),
+        ]);
+
+        const text = await itemsRes.text();
         let items: Record<string, string>[] = [];
         try {
           const parsed = JSON.parse(text);
           items = Array.isArray(parsed) ? parsed : [];
         } catch { items = []; }
-        return { order, items };
+
+        // 从编辑页 HTML 中提取 Delivery Date
+        let deliveryDate = order.deliveryDate;
+        if (detailRes) {
+          const html = await detailRes.text();
+          const m = html.match(/Delivery Date[\s\S]{0,200}?value="([^"]+)"/i);
+          if (m) deliveryDate = m[1];
+        }
+
+        return { order: { ...order, deliveryDate }, items };
       })
     );
 
