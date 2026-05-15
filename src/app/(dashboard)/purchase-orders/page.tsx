@@ -353,6 +353,28 @@ export default function PurchaseOrdersPage() {
               </div>
             </div>
 
+            {(() => {
+              const itemsAud = form.items.reduce((s, it) => s + (parseFloat(it.quantity) || 0) * (parseFloat(it.unitCost) || 0), 0);
+              const shipAud = parseFloat(form.shippingFee) || 0;
+              const totalAud = itemsAud + shipAud;
+              if (totalAud === 0) return null;
+              return (
+                <div className="bg-slate-50 rounded-lg px-4 py-3 text-sm space-y-1 border border-slate-200">
+                  <div className="flex justify-between text-slate-500">
+                    <span>商品小计</span><span>{fmt(itemsAud)}</span>
+                  </div>
+                  {shipAud > 0 && (
+                    <div className="flex justify-between text-slate-500">
+                      <span>运费（已按汇率换算为澳币）</span><span>{fmt(shipAud)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-semibold text-slate-800 pt-1 border-t border-slate-200">
+                    <span>合计</span><span>{fmt(totalAud)}</span>
+                  </div>
+                </div>
+              );
+            })()}
+
             <div className="flex gap-3 pt-2">
               <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-sm">取消</button>
               <button type="submit" disabled={saving} className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg text-sm font-medium">
