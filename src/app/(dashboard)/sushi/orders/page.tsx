@@ -68,8 +68,6 @@ function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
   const now = new Date();
   const [cal, setCal] = useState({ year: now.getFullYear(), month: now.getMonth() });
   const [hoveredSupplier, setHoveredSupplier] = useState<string | null>(null);
-  const [expandedCells, setExpandedCells] = useState<Set<string>>(new Set());
-
   const supplierColorMap = useMemo(() => {
     const unique = [...new Set(orders.map(o => o.supplierName || "未知"))];
     const map = new Map<string, typeof CAL_PALETTE[0]>();
@@ -106,7 +104,6 @@ function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
   }, [cal]);
 
   const todayKey = now.toISOString().slice(0, 10);
-  const MAX_VISIBLE = 3;
 
   return (
     <div className="bg-white rounded-xl border border-slate-100 shadow-sm mb-6">
@@ -137,9 +134,6 @@ function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
           const key = `${cal.year}-${String(cal.month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           const events = dayMap.get(key) ?? [];
           const isToday = key === todayKey;
-          const isExpanded = expandedCells.has(key);
-          const visible = isExpanded ? events : events.slice(0, MAX_VISIBLE);
-          const hiddenCount = events.length - MAX_VISIBLE;
           return (
             <div key={i} className="relative min-h-[120px] border-r border-b border-slate-100 p-1.5">
               <div className={`text-xs font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full mx-auto
@@ -147,7 +141,7 @@ function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
                 {day}
               </div>
               <div className="space-y-0.5">
-                {visible.map((ev, ei) => {
+                {events.map((ev, ei) => {
                   const colors = supplierColorMap.get(ev.supplier) ?? CAL_PALETTE[0];
                   const isActive = hoveredSupplier === ev.supplier;
                   const isDimmed = hoveredSupplier !== null && !isActive;
@@ -180,22 +174,6 @@ function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
                     </div>
                   );
                 })}
-                {!isExpanded && hiddenCount > 0 && (
-                  <button
-                    onClick={() => setExpandedCells(p => { const s = new Set(p); s.add(key); return s; })}
-                    className="text-[11px] text-blue-500 hover:text-blue-700 hover:underline px-1 w-full text-left transition-colors"
-                  >
-                    +{hiddenCount} 更多…
-                  </button>
-                )}
-                {isExpanded && events.length > MAX_VISIBLE && (
-                  <button
-                    onClick={() => setExpandedCells(p => { const s = new Set(p); s.delete(key); return s; })}
-                    className="text-[11px] text-slate-400 hover:text-slate-600 px-1 w-full text-left transition-colors"
-                  >
-                    收起
-                  </button>
-                )}
               </div>
             </div>
           );
