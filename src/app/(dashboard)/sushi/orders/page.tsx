@@ -208,6 +208,13 @@ export default function SushiOrdersPage() {
   const [applying, setApplying] = useState<string | null>(null);
   const [applyMsg, setApplyMsg] = useState<{ id: string; ok: boolean; text: string } | null>(null);
   const [filter, setFilter] = useState<number | "all">("all");
+  const [notifyTestMsg, setNotifyTestMsg] = useState("");
+  async function handleNotifyTest() {
+    setNotifyTestMsg("发送中...");
+    const res = await fetch("/api/sushi/notify-test", { method: "POST" });
+    const data = await res.json();
+    setNotifyTestMsg(data.error ? `失败：${data.error}` : `成功，key: ${data.keyPrefix}`);
+  }
 
   async function load() {
     setLoading(true);
@@ -276,11 +283,22 @@ export default function SushiOrdersPage() {
           </p>
         </div>
         {isRoot && (
-          <button onClick={handleSync} disabled={syncing}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-            <RefreshCw size={15} className={syncing ? "animate-spin" : ""} />
-            {syncing ? "同步中..." : "立即同步"}
-          </button>
+          <div className="flex items-center gap-2">
+            {notifyTestMsg && (
+              <span className={`text-xs px-3 py-1.5 rounded-lg ${notifyTestMsg.includes("失败") ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700"}`}>
+                {notifyTestMsg}
+              </span>
+            )}
+            <button onClick={handleNotifyTest}
+              className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              测试微信通知
+            </button>
+            <button onClick={handleSync} disabled={syncing}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              <RefreshCw size={15} className={syncing ? "animate-spin" : ""} />
+              {syncing ? "同步中..." : "立即同步"}
+            </button>
+          </div>
         )}
       </div>
 
