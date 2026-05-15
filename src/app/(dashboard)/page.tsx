@@ -64,28 +64,28 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-800">业务总览</h1>
+    <div className="p-4 md:p-8">
+      <div className="mb-5 md:mb-8">
+        <h1 className="text-xl md:text-2xl font-bold text-slate-800">业务总览</h1>
         <p className="text-slate-500 text-sm mt-1">{format(new Date(), "yyyy年M月d日")}</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-5 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5 mb-5 md:mb-8">
         {cards.map(({ label, value, icon: Icon, color, sub }) => (
-          <div key={label} className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-start gap-4">
-            <div className={`${color} w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow`}>
-              <Icon size={20} className="text-white" />
+          <div key={label} className="bg-white rounded-xl shadow-sm border border-slate-100 p-3 md:p-5 flex items-start gap-3">
+            <div className={`${color} w-9 h-9 md:w-11 md:h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow`}>
+              <Icon size={17} className="text-white" />
             </div>
-            <div>
-              <p className="text-slate-500 text-xs mb-0.5">{label}</p>
-              <p className="text-2xl font-bold text-slate-800">{value}</p>
-              <p className="text-slate-400 text-xs mt-0.5">{sub}</p>
+            <div className="min-w-0">
+              <p className="text-slate-500 text-xs mb-0.5 truncate">{label}</p>
+              <p className="text-lg md:text-2xl font-bold text-slate-800 leading-tight">{value}</p>
+              <p className="text-slate-400 text-xs mt-0.5 truncate">{sub}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 md:p-6">
         <div className="flex items-center gap-2 mb-4">
           <ClipboardList size={18} className="text-slate-400" />
           <h2 className="font-semibold text-slate-700">最近销售订单</h2>
@@ -93,32 +93,34 @@ export default function DashboardPage() {
         {data.recentOrders.length === 0 ? (
           <p className="text-slate-400 text-sm py-6 text-center">暂无订单</p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 text-slate-400 text-xs">
-                <th className="text-left pb-2 font-medium">日期</th>
-                <th className="text-left pb-2 font-medium">客户</th>
-                <th className="text-right pb-2 font-medium">营收</th>
-                <th className="text-right pb-2 font-medium">利润</th>
-                <th className="text-center pb-2 font-medium">状态</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {data.recentOrders.map((order) => (
-                <tr key={order.id}>
-                  <td className="py-2.5 text-slate-600">{format(new Date(order.orderDate), "MM/dd HH:mm")}</td>
-                  <td className="py-2.5 text-slate-700 font-medium">{order.customer.name}</td>
-                  <td className="py-2.5 text-right text-slate-700">{fmt(order.totalRevenue)}</td>
-                  <td className="py-2.5 text-right text-emerald-600 font-medium">{fmt(order.totalProfit)}</td>
-                  <td className="py-2.5 text-center">
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLOR[order.status]}`}>
-                      {STATUS_LABEL[order.status]}
-                    </span>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[420px]">
+              <thead>
+                <tr className="border-b border-slate-100 text-slate-400 text-xs">
+                  <th className="text-left pb-2 font-medium">日期</th>
+                  <th className="text-left pb-2 font-medium">客户</th>
+                  <th className="text-right pb-2 font-medium">营收</th>
+                  <th className="text-right pb-2 font-medium">利润</th>
+                  <th className="text-center pb-2 font-medium">状态</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {data.recentOrders.map((order) => (
+                  <tr key={order.id}>
+                    <td className="py-2.5 text-slate-600 whitespace-nowrap">{format(new Date(order.orderDate), "MM/dd HH:mm")}</td>
+                    <td className="py-2.5 text-slate-700 font-medium">{order.customer.name}</td>
+                    <td className="py-2.5 text-right text-slate-700 whitespace-nowrap">{fmt(order.totalRevenue)}</td>
+                    <td className="py-2.5 text-right text-emerald-600 font-medium whitespace-nowrap">{fmt(order.totalProfit)}</td>
+                    <td className="py-2.5 text-center">
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLOR[order.status]}`}>
+                        {STATUS_LABEL[order.status]}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
