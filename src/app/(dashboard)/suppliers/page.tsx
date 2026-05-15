@@ -31,7 +31,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 
 export default function SuppliersPage() {
   const { role } = useSession();
-  const isOwner = role === "OWNER";
+  const isOwner = role === "OWNER" || role === "MANAGER";
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);

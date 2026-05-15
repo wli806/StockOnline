@@ -83,12 +83,12 @@ export default function CustomersPage() {
       (c.phone || "").includes(search)
   );
 
-  if (role !== "OWNER") {
+  if (role !== "OWNER" && role !== "MANAGER") {
     return (
       <div className="p-8 flex flex-col items-center justify-center min-h-[60vh] text-center">
         <Lock size={40} className="text-slate-300 mb-3" />
         <p className="text-slate-500 font-medium">无访问权限</p>
-        <p className="text-slate-400 text-sm mt-1">客户信息仅限所有者查看</p>
+        <p className="text-slate-400 text-sm mt-1">客户信息仅限所有者和管理员查看</p>
       </div>
     );
   }

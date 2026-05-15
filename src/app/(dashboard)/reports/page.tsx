@@ -41,12 +41,12 @@ export default function ReportsPage() {
 
   const maxNet = Math.max(...data.map((r) => Math.abs(r.net)), 1);
 
-  if (role !== "OWNER" && role !== "INVESTOR") {
+  if (role !== "OWNER" && role !== "MANAGER" && role !== "INVESTOR") {
     return (
       <div className="p-8 flex flex-col items-center justify-center min-h-[60vh] text-center">
         <Lock size={40} className="text-slate-300 mb-3" />
         <p className="text-slate-500 font-medium">无访问权限</p>
-        <p className="text-slate-400 text-sm mt-1">财务数据仅限所有者和投资者查看</p>
+        <p className="text-slate-400 text-sm mt-1">财务数据仅限所有者、管理员和投资者查看</p>
       </div>
     );
   }
