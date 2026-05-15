@@ -198,11 +198,13 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
         } catch { items = []; }
 
         // 从编辑页 HTML 中提取 Delivery Date
+        // 页面里日期格式 input 的顺序：第1个=PO Date，第2个=Delivery Date
         let deliveryDate = order.deliveryDate;
         if (detailRes) {
           const html = await detailRes.text();
-          const m = html.match(/Delivery Date[\s\S]{0,200}?value="([^"]+)"/i);
-          if (m) deliveryDate = m[1];
+          const dateInputs = [...html.matchAll(/value=["'](\d{1,2}-[A-Za-z]{3}-\d{2,4})["']/gi)];
+          if (dateInputs.length >= 2) deliveryDate = dateInputs[1][1];
+          else if (dateInputs.length === 1) deliveryDate = dateInputs[0][1];
         }
 
         return { order: { ...order, deliveryDate }, items };
