@@ -193,7 +193,7 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
           }),
           // Normal 订单需请求详情页拿 Delivery Date（路径相对于 /shop/ 而非 /shop/home/）
           order.deliveryDate === null && order.editPath
-            ? fetch(`${BASE}/shop/${order.editPath}`, { headers: { Cookie: `ci_session=${session}` } })
+            ? fetch(`${BASE}/shop/${order.editPath}`, { headers: { Cookie: `ci_session=${session}`, Referer: `${BASE}/shop/home`, "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" } })
             : (order.deliveryDate === null && !order.editPath
                 ? (debug.push(`[${order.supplier}] id=${order.id} editPath=null (href regex missed)`), Promise.resolve(null))
                 : Promise.resolve(null)),
