@@ -180,6 +180,7 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
   let synced = 0;
   const newOrders: string[] = [];
   const todayDeliveries: string[] = [];
+  const tomorrowDeliveries: string[] = [];
 
   for (let i = 0; i < allOrders.length; i += 5) {
     const batch = allOrders.slice(i, i + 5);
@@ -273,13 +274,16 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
             })),
           });
         }
-        // 配送日 ≤ 今天且未入库 → 自动入库 + 收集通知
-        if (!dbOrder.inventoryApplied) {
-          const deliveryYMD = parseDeliveryDate(order.deliveryDate ?? "");
+        // 配送日判断：今天自动入库，明天推提醒
+        const deliveryYMD = parseDeliveryDate(order.deliveryDate ?? "");
+        if (deliveryYMD) {
           const todayYMD = new Date().toISOString().slice(0, 10);
-          if (deliveryYMD && deliveryYMD <= todayYMD) {
+          const tomorrowYMD = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+          if (deliveryYMD <= todayYMD && !dbOrder.inventoryApplied) {
             todayDeliveries.push(order.supplier);
             try { await applyOrderToInventory(dbOrder.id); } catch { /* 不影响同步 */ }
+          } else if (deliveryYMD === tomorrowYMD) {
+            tomorrowDeliveries.push(order.supplier);
           }
         }
         synced++;
@@ -301,6 +305,13 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
     const unique = [...new Set(todayDeliveries)];
     await wxNotify(
       `📦 寿司系统：今日 ${unique.length} 笔订单到货`,
+      unique.map(s => `- ${s}`).join("\n"),
+    );
+  }
+  if (tomorrowDeliveries.length > 0) {
+    const unique = [...new Set(tomorrowDeliveries)];
+    await wxNotify(
+      `🚚 寿司系统：明日 ${unique.length} 笔订单到货提醒`,
       unique.map(s => `- ${s}`).join("\n"),
     );
   }
