@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { applyOrderToInventory } from "./sushi-inventory-apply";
+import { wxNotify } from "./serverchan";
 
 const BASE = "https://oss.spientsyserv.com";
 const MONTH_ABBR: Record<string, string> = {
@@ -177,6 +178,8 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
   const errors: string[] = [];
   const debug: string[] = [];
   let synced = 0;
+  const newOrders: string[] = [];
+  const todayDeliveries: string[] = [];
 
   for (let i = 0; i < allOrders.length; i += 5) {
     const batch = allOrders.slice(i, i + 5);
@@ -230,6 +233,7 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
       if (result.status === "rejected") { errors.push(String(result.reason)); continue; }
       const { order, items } = result.value;
       try {
+        const isNew = !(await prisma.sushiOrder.findUnique({ where: { ossId: order.id }, select: { id: true } }));
         const dbOrder = await prisma.sushiOrder.upsert({
           where: { ossId: order.id },
           update: {
@@ -255,6 +259,7 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
             year: order.year,
           },
         });
+        if (isNew && items.length > 0) newOrders.push(order.supplier);
         await prisma.sushiOrderItem.deleteMany({ where: { orderId: dbOrder.id } });
         if (items.length > 0) {
           await prisma.sushiOrderItem.createMany({
@@ -268,11 +273,12 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
             })),
           });
         }
-        // 配送日 ≤ 今天且未入库 → 自动入库
+        // 配送日 ≤ 今天且未入库 → 自动入库 + 收集通知
         if (!dbOrder.inventoryApplied) {
           const deliveryYMD = parseDeliveryDate(order.deliveryDate ?? "");
           const todayYMD = new Date().toISOString().slice(0, 10);
           if (deliveryYMD && deliveryYMD <= todayYMD) {
+            todayDeliveries.push(order.supplier);
             try { await applyOrderToInventory(dbOrder.id); } catch { /* 不影响同步 */ }
           }
         }
@@ -281,6 +287,22 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
         errors.push(`Order ${order.id}: ${String(e)}`);
       }
     }
+  }
+
+  // 汇总微信通知
+  if (newOrders.length > 0) {
+    const unique = [...new Set(newOrders)];
+    await wxNotify(
+      `🛒 寿司系统：${unique.length} 个新采购订单`,
+      unique.map(s => `- ${s}`).join("\n"),
+    );
+  }
+  if (todayDeliveries.length > 0) {
+    const unique = [...new Set(todayDeliveries)];
+    await wxNotify(
+      `📦 寿司系统：今日 ${unique.length} 笔订单到货`,
+      unique.map(s => `- ${s}`).join("\n"),
+    );
   }
 
   return { synced, errors, debug };
