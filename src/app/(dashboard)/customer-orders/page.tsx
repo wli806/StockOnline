@@ -210,10 +210,10 @@ function CustomerOrdersContent() {
     : "销售订单";
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">{filterTitle}</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-800">{filterTitle}</h1>
           <p className="text-slate-500 text-sm mt-0.5">选择采购批次自动带入进价，精确计算每单利润</p>
         </div>
         {isOwner && (
@@ -260,7 +260,7 @@ function CustomerOrdersContent() {
           </div>
         ) : orders.map(order => (
           <div key={order.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex items-center justify-between flex-wrap px-4 md:px-6 py-3 md:py-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="font-semibold text-slate-800">{order.customer.name}</span>
@@ -299,8 +299,9 @@ function CustomerOrdersContent() {
               </div>
             </div>
             {expanded.has(order.id) && (
-              <div className="border-t border-slate-100 px-6 py-4 bg-slate-50/50">
-                <table className="w-full text-sm">
+              <div className="border-t border-slate-100 px-4 md:px-6 py-4 bg-slate-50/50">
+                <div className="overflow-x-auto">
+                <table className="w-full text-sm min-w-[400px]">
                   <thead>
                     <tr className="text-slate-400 text-xs">
                       <th className="text-left pb-2 font-medium">商品</th>
@@ -336,6 +337,7 @@ function CustomerOrdersContent() {
                     </tfoot>
                   )}
                 </table>
+                </div>
                 {order.notes && <p className="mt-3 text-sm text-slate-500">备注：{order.notes}</p>}
               </div>
             )}

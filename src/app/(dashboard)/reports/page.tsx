@@ -52,10 +52,10 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">利润报表</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-800">利润报表</h1>
           <p className="text-slate-500 text-sm mt-0.5">按周或按月汇总营收、利润与净收益</p>
         </div>
         <div className="flex items-center gap-3">
@@ -80,7 +80,7 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
           { label: "总营收", value: totalRevenue, color: "text-blue-600" },
           { label: "销售利润", value: totalProfit, color: "text-emerald-600" },
@@ -130,7 +130,8 @@ export default function ReportsPage() {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[500px]">
               <thead>
                 <tr className="border-b border-slate-100 text-slate-400 text-xs">
                   <th className="text-left px-6 py-3 font-medium">周期</th>
@@ -156,6 +157,7 @@ export default function ReportsPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </>
       )}

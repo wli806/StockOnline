@@ -123,10 +123,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">用户管理</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-800">用户管理</h1>
           <p className="text-slate-500 text-sm mt-0.5">
             {isRoot ? "管理账户权限，控制各角色的可见内容" : "仅 root 账户可增删改用户"}
           </p>
@@ -159,7 +159,7 @@ export default function SettingsPage() {
         ) : (
           <div className="divide-y divide-slate-50">
             {users.map((u) => (
-              <div key={u.id} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
+              <div key={u.id} className="flex items-center justify-between px-4 md:px-6 py-4 hover:bg-slate-50 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 font-semibold text-sm">
                     {u.username[0].toUpperCase()}

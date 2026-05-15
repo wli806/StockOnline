@@ -82,10 +82,10 @@ export default function InventoryPage() {
   const lowCount = items.filter((i) => i.quantity <= 5).length;
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">库存管理</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-800">库存管理</h1>
           <p className="text-slate-500 text-sm mt-0.5">当前库存数量，采购到货后自动更新</p>
         </div>
         {lowCount > 0 && (
@@ -136,7 +136,8 @@ export default function InventoryPage() {
             <p className="text-slate-400">暂无库存记录</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[500px]">
             <thead>
               <tr className="border-b border-slate-100 text-slate-400 text-xs">
                 <th className="text-left px-6 py-3 font-medium">商品</th>
@@ -184,6 +185,7 @@ export default function InventoryPage() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

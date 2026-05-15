@@ -112,10 +112,10 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">商品管理</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-800">商品管理</h1>
           <p className="text-slate-500 text-sm mt-0.5">管理商品信息及进价（成本），作为利润计算的参考基准</p>
         </div>
         {isOwner && (
@@ -137,7 +137,8 @@ export default function ProductsPage() {
             <p className="text-slate-400">暂无商品，点击右上角添加</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[500px]">
             <thead>
               <tr className="border-b border-slate-100 text-slate-400 text-xs">
                 <th className="text-left px-6 py-3 font-medium">商品名称</th>
@@ -178,6 +179,7 @@ export default function ProductsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

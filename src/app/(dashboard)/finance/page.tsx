@@ -89,10 +89,10 @@ export default function FinancePage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">财务流水</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-800">财务流水</h1>
           <p className="text-slate-500 text-sm mt-0.5">记录所有收支明细，追踪资金流动</p>
         </div>
         {isOwner && (
@@ -103,7 +103,7 @@ export default function FinancePage() {
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         {[
           { label: "总收入", value: totalIncome, icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50 border-emerald-200" },
           { label: "总支出", value: totalExpense, icon: TrendingDown, color: "text-red-500", bg: "bg-red-50 border-red-200" },
@@ -140,7 +140,8 @@ export default function FinancePage() {
             <p className="text-slate-400">暂无财务记录</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[500px]">
             <thead>
               <tr className="border-b border-slate-100 text-slate-400 text-xs">
                 <th className="text-left px-6 py-3 font-medium">日期</th>
@@ -177,6 +178,7 @@ export default function FinancePage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

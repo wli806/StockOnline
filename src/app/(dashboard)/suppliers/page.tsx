@@ -102,10 +102,10 @@ export default function SuppliersPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">供应商管理</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-800">供应商管理</h1>
           <p className="text-slate-500 text-sm mt-0.5">管理上游供应商信息，新建采购单时可直接选择</p>
         </div>
         <button
@@ -144,7 +144,8 @@ export default function SuppliersPage() {
             <p className="text-slate-400">暂无供应商，点击右上角添加</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[500px]">
             <thead>
               <tr className="border-b border-slate-100 text-slate-400 text-xs">
                 <th className="text-left px-6 py-3 font-medium">供应商名称</th>
@@ -175,6 +176,7 @@ export default function SuppliersPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

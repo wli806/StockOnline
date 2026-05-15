@@ -94,10 +94,10 @@ export default function CustomersPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">客户管理</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-800">客户管理</h1>
           <p className="text-slate-500 text-sm mt-0.5">以收货地址为唯一标识，记录购买历史</p>
         </div>
         <button
@@ -148,7 +148,7 @@ export default function CustomersPage() {
         ) : (
           <div className="divide-y divide-slate-50">
             {filtered.map((c) => (
-              <div key={c.address} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
+              <div key={c.address} className="flex items-center justify-between px-4 md:px-6 py-4 hover:bg-slate-50 transition-colors">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="font-semibold text-slate-800">{c.name}</span>
