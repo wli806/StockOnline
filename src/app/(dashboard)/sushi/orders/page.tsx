@@ -235,7 +235,8 @@ export default function SushiOrdersPage() {
     }
   }
 
-  const filtered = filter === "all" ? orders : orders.filter(o => o.status === filter);
+  const filtered = (filter === "all" ? orders : orders.filter(o => o.status === filter))
+    .filter(o => o.items.length > 0);
   const lastSync = orders.length > 0 ? orders[0].syncedAt : null;
 
   return (
