@@ -18,6 +18,7 @@ import {
   LogOut,
   UtensilsCrossed,
   Boxes,
+  ClipboardList,
   ChevronDown,
   type LucideIcon,
 } from "lucide-react";
@@ -40,6 +41,7 @@ const navItems: NavItem[] = [
   {
     href: "/sushi", label: "寿司采购", icon: UtensilsCrossed, rootOnly: true,
     children: [
+      { href: "/sushi/orders", label: "订单管理", icon: ClipboardList },
       { href: "/sushi/inventory", label: "库存统计", icon: Boxes },
     ],
   },
