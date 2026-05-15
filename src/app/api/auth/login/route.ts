@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { signToken } from "@/lib/auth";
+import { logActivity } from "@/lib/activity-log";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: NextRequest) {
@@ -22,6 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = await signToken({ userId: user.id, username: user.username, role: user.role });
+    logActivity(user.username, "登录");
 
     const response = NextResponse.json({ success: true, role: user.role });
     response.headers.set(
