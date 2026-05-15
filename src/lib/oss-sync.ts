@@ -198,13 +198,18 @@ export async function syncOSSOrders(): Promise<{ synced: number; errors: string[
         } catch { items = []; }
 
         // 从编辑页 HTML 中提取 Delivery Date
-        // 页面里日期格式 input 的顺序：第1个=PO Date，第2个=Delivery Date
+        // 扫描整个 HTML，找所有日期格式字符串（去重），第1个=PO Date，第2个=Delivery Date
         let deliveryDate = order.deliveryDate;
         if (detailRes) {
           const html = await detailRes.text();
-          const dateInputs = [...html.matchAll(/value=["'](\d{1,2}-[A-Za-z]{3}-\d{2,4})["']/gi)];
-          if (dateInputs.length >= 2) deliveryDate = dateInputs[1][1];
-          else if (dateInputs.length === 1) deliveryDate = dateInputs[0][1];
+          const seen = new Set<string>();
+          const dates: string[] = [];
+          for (const m of html.matchAll(/\b(\d{1,2}-[A-Za-z]{3}-\d{2,4})\b/gi)) {
+            const normalized = normalizeShortYear(m[1]);
+            if (!seen.has(normalized)) { seen.add(normalized); dates.push(normalized); }
+          }
+          if (dates.length >= 2) deliveryDate = dates[1];
+          else if (dates.length === 1) deliveryDate = dates[0];
         }
 
         return { order: { ...order, deliveryDate }, items };
