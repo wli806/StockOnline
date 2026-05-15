@@ -19,6 +19,8 @@ import {
   UtensilsCrossed,
   Boxes,
   ChevronDown,
+  Menu,
+  X,
   type LucideIcon,
 } from "lucide-react";
 
@@ -58,6 +60,7 @@ export default function Sidebar({ role, username }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { currency, toggle } = useCurrency();
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
     navItems.forEach(item => {
@@ -86,15 +89,33 @@ export default function Sidebar({ role, username }: SidebarProps) {
   });
 
   return (
-    <aside className="w-[220px] min-h-screen bg-slate-900 text-white flex flex-col fixed left-0 top-0 z-50">
+    <>
+      {/* 移动端汉堡按钮 */}
+      <button
+        className="md:hidden fixed top-3 left-3 z-50 bg-slate-900 text-white p-2 rounded-lg shadow-lg"
+        onClick={() => setMobileOpen(true)}
+      >
+        <Menu size={20} />
+      </button>
+
+      {/* 移动端遮罩 */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+    <aside className={`w-[220px] min-h-screen bg-slate-900 text-white flex flex-col fixed left-0 top-0 z-50 transition-transform duration-300 md:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
       <div className="px-5 py-5 border-b border-slate-700">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-lg shadow">
-            T
-          </div>
-          <div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-lg shadow">T</div>
             <p className="font-semibold text-sm leading-tight">库存管理系统</p>
           </div>
+          <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setMobileOpen(false)}>
+            <X size={18} />
+          </button>
         </div>
       </div>
 
@@ -128,6 +149,7 @@ export default function Sidebar({ role, username }: SidebarProps) {
               ) : (
                 <Link
                   href={href}
+                  onClick={() => setMobileOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
                     active
                       ? "bg-blue-600 text-white font-medium"
@@ -146,6 +168,7 @@ export default function Sidebar({ role, username }: SidebarProps) {
                       <Link
                         key={chref}
                         href={chref}
+                        onClick={() => setMobileOpen(false)}
                         className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-colors ${
                           cActive
                             ? "bg-blue-500/70 text-white font-medium"
@@ -196,5 +219,6 @@ export default function Sidebar({ role, username }: SidebarProps) {
         </button>
       </div>
     </aside>
+    </>
   );
 }

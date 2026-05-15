@@ -130,12 +130,12 @@ function SushiCalendar({ orders }: { orders: SushiOrder[] }) {
       {/* Calendar grid */}
       <div className="grid grid-cols-7 border-l border-slate-100">
         {cells.map((day, i) => {
-          if (!day) return <div key={i} className="min-h-[120px] border-r border-b border-slate-100 bg-slate-50/60" />;
+          if (!day) return <div key={i} className="min-h-[72px] md:min-h-[120px] border-r border-b border-slate-100 bg-slate-50/60" />;
           const key = `${cal.year}-${String(cal.month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           const events = dayMap.get(key) ?? [];
           const isToday = key === todayKey;
           return (
-            <div key={i} className="relative min-h-[120px] border-r border-b border-slate-100 p-1.5">
+            <div key={i} className="relative min-h-[72px] md:min-h-[120px] border-r border-b border-slate-100 p-1.5">
               <div className={`text-xs font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full mx-auto
                 ${isToday ? "bg-blue-500 text-white" : "text-slate-500"}`}>
                 {day}
@@ -273,8 +273,8 @@ export default function SushiOrdersPage() {
   const lastSync = orders.length > 0 ? orders[0].syncedAt : null;
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 md:p-8">
+      <div className="flex items-center justify-between mb-4 md:mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">寿司采购订单</h1>
           <p className="text-slate-500 text-sm mt-0.5">
@@ -284,6 +284,7 @@ export default function SushiOrdersPage() {
         </div>
         {isRoot && (
           <div className="flex items-center gap-2">
+            {/* 测试微信通知按钮（暂时隐藏）
             {notifyTestMsg && (
               <span className={`text-xs px-3 py-1.5 rounded-lg ${notifyTestMsg.includes("失败") ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700"}`}>
                 {notifyTestMsg}
@@ -293,10 +294,11 @@ export default function SushiOrdersPage() {
               className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
               测试微信通知
             </button>
+            */}
             <button onClick={handleSync} disabled={syncing}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
               <RefreshCw size={15} className={syncing ? "animate-spin" : ""} />
-              {syncing ? "同步中..." : "立即同步"}
+              <span className="hidden sm:inline">{syncing ? "同步中..." : "立即同步"}</span>
             </button>
           </div>
         )}
@@ -344,7 +346,7 @@ export default function SushiOrdersPage() {
           const st = STATUS_MAP[order.status] ?? { label: "未知", cls: "bg-slate-100 text-slate-500" };
           return (
             <div key={order.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-              <div className="flex items-center justify-between px-6 py-4">
+              <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                     <span className="font-semibold text-slate-800">{order.supplierName || "未知供应商"}</span>
@@ -394,8 +396,8 @@ export default function SushiOrdersPage() {
                     <Package size={14} className="inline mr-1" />暂无商品明细
                   </div>
                 ) : (
-                  <div className="border-t border-slate-100 px-6 py-4 bg-slate-50/50">
-                    <table className="w-full text-sm">
+                  <div className="border-t border-slate-100 px-4 md:px-6 py-4 bg-slate-50/50 overflow-x-auto">
+                    <table className="w-full text-sm min-w-[300px]">
                       <thead>
                         <tr className="text-slate-400 text-xs border-b border-slate-200">
                           <th className="text-left pb-2 font-medium">代码</th>
