@@ -92,12 +92,103 @@ npm run dev
 
 ## 服务器部署
 
+### 全新服务器初次部署（Ubuntu 24.04）
+
+**1. 安装环境**
+
 ```bash
-git pull
-npx prisma migrate deploy
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+apt install -y nodejs git nginx
+npm install -g pm2
+```
+
+**2. 拉取代码**
+
+```bash
+cd /var/www
+git clone https://github.com/wli806/StockOnline.git
+cd StockOnline
+```
+
+**3. 配置环境变量**
+
+```bash
+nano .env
+```
+
+```env
+JWT_SECRET=        # 用 openssl rand -base64 32 生成
+SERVERCHAN_KEY=    # Server酱推送key，没有可不填
+CRON_SECRET=       # 定时任务密钥，没有可不填
+```
+
+**4. 安装依赖 & 构建**
+
+```bash
+npm install
 npx prisma generate
+npx prisma migrate deploy
+node scripts/init-db.mjs
 npm run build
-pm2 restart all
+```
+
+初始账号 — 用户名：`root`，密码：`root`，**登录后请立即修改密码**。
+
+**5. 启动服务**
+
+```bash
+pm2 start npm --name "StockOnline" -- start
+pm2 save
+pm2 startup    # 复制它输出的命令执行，实现开机自启
+```
+
+**6. 配置 Nginx**
+
+```bash
+nano /etc/nginx/sites-available/stockonline
+```
+
+```nginx
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+```bash
+ln -s /etc/nginx/sites-available/stockonline /etc/nginx/sites-enabled/
+rm /etc/nginx/sites-enabled/default
+nginx -t
+systemctl enable nginx
+systemctl reload nginx
+```
+
+**7. 阿里云防火墙**
+
+控制台 → 防火墙 → 入方向 → 确保 **80 端口**已开放。
+
+访问 `http://服务器公网IP` 即可。
+
+---
+
+### 日常更新
+
+```bash
+cd /var/www/StockOnline
+git pull
+npx prisma generate
+npx prisma migrate deploy
+npm run build
+pm2 restart StockOnline
 ```
 
 > 如遇 GitHub 连接问题，可先执行：
