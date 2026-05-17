@@ -83,12 +83,9 @@ function normalizeShortYear(s: string): string {
 }
 
 function parseNormalOrders(tbody: string, weekNo: number, year: number): RawOrder[] {
-  // 匹配两位或四位年份的日期，如 "11-May-26" 或 "11-May-2026"
-  const DATE_RE = /\b(\d{1,2}-[A-Za-z]{3}-(?:\d{2}|\d{4}))\b/;
   const orders: RawOrder[] = [];
   const rows = tbody.split(/<\/tr>/i);
   for (const row of rows) {
-    // Capture full path: editorder/{ossId}/{weekNo}
     const hrefMatch = row.match(/href=["']([^"']*editorder\/(\d+)(?:\/(\d+))?)[^"']*["']/i);
     if (!hrefMatch) continue;
     const id = hrefMatch[2];
@@ -100,17 +97,29 @@ function parseNormalOrders(tbody: string, weekNo: number, year: number): RawOrde
     const supplierRaw = tdTexts[2] ?? "";
     const supplier = supplierRaw.replace(/^[A-Z]\s+/, "").trim();
 
-    // td[0] = ORDER TIME（下单时间），td[1] = PO TIME（截止时间）
-    const orderDateRaw = (tdTexts[0] ?? "").match(DATE_RE)?.[1] ?? "";
-    const orderDate = orderDateRaw ? normalizeShortYear(orderDateRaw) : "";
+    // 从所有列中提取所有唯一日期，第一个是下单日，第二个（不同于第一个）是配送日
+    const seen = new Set<string>();
+    const allDates: string[] = [];
+    for (const td of tdTexts) {
+      const re = /\b(\d{1,2}-[A-Za-z]{3}-(?:\d{2}|\d{4}))\b/gi;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(td)) !== null) {
+        const norm = normalizeShortYear(m[1]);
+        if (!seen.has(norm)) { seen.add(norm); allDates.push(norm); }
+      }
+    }
+
+    const orderDate = allDates[0] ?? "";
+    const deliveryDate = allDates.find(d => d !== orderDate) ?? null;
 
     orders.push({
       id, poNumber, supplier, status: 2,
       poDate: orderDate,
       orderDate,
-      deliveryDate: null, // Normal 列表无此列，由编辑页补充
+      deliveryDate,
       weekNo, year,
-      editPath,
+      // 如果已从表格提取到配送日期则跳过编辑页请求
+      editPath: deliveryDate ? null : editPath,
     });
   }
   return orders;
