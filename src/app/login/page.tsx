@@ -25,8 +25,7 @@ export default function LoginPage() {
         setError(data.error || "登录失败");
         return;
       }
-      router.push("/");
-      router.refresh();
+      window.location.href = "/";
     } catch {
       setError("网络错误，请重试");
     } finally {
