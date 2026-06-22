@@ -10,6 +10,7 @@ import { format } from "date-fns";
 interface FinancialRecord {
   id: string; type: string; amount: number; description: string;
   category: string | null; date: string; createdAt: string;
+  source?: "manual" | "purchase" | "sale";
 }
 
 const CATEGORIES = ["采购成本", "运费", "平台费用", "营业收入", "退款", "杂费", "其他"];
@@ -148,6 +149,7 @@ export default function FinancePage() {
                 <th className="text-left px-4 py-3 font-medium">类型</th>
                 <th className="text-left px-4 py-3 font-medium">描述</th>
                 <th className="text-left px-4 py-3 font-medium">类别</th>
+                <th className="text-left px-4 py-3 font-medium">来源</th>
                 <th className="text-right px-4 py-3 font-medium">金额</th>
                 {isOwner && <th className="text-center px-4 py-3 font-medium">操作</th>}
               </tr>
@@ -164,14 +166,27 @@ export default function FinancePage() {
                   </td>
                   <td className="px-4 py-3 text-slate-700 font-medium">{r.description}</td>
                   <td className="px-4 py-3 text-slate-500">{r.category || "-"}</td>
+                  <td className="px-4 py-3">
+                    {r.source === "purchase" ? (
+                      <span className="inline-flex text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">采购订单</span>
+                    ) : r.source === "sale" ? (
+                      <span className="inline-flex text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">销售订单</span>
+                    ) : (
+                      <span className="inline-flex text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">手动</span>
+                    )}
+                  </td>
                   <td className={`px-4 py-3 text-right font-semibold ${r.type === "INCOME" ? "text-emerald-600" : "text-red-500"}`}>
                     {r.type === "INCOME" ? "+" : "-"}{fmt(r.amount)}
                   </td>
                   {isOwner && (
                     <td className="px-4 py-3 text-center">
-                      <button onClick={() => handleDelete(r.id)} className="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50">
-                        <Trash2 size={15} />
-                      </button>
+                      {(!r.source || r.source === "manual") ? (
+                        <button onClick={() => handleDelete(r.id)} className="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50">
+                          <Trash2 size={15} />
+                        </button>
+                      ) : (
+                        <span className="text-slate-300 text-xs">自动</span>
+                      )}
                     </td>
                   )}
                 </tr>

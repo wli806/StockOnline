@@ -10,14 +10,60 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get("start");
     const endDate = searchParams.get("end");
 
-    const records = await prisma.financialRecord.findMany({
-      where:
-        startDate && endDate
-          ? { date: { gte: new Date(startDate), lte: new Date(endDate) } }
-          : undefined,
-      orderBy: { date: "desc" },
-    });
-    return NextResponse.json(records);
+    const dateFilter = startDate && endDate
+      ? { gte: new Date(startDate), lte: new Date(endDate) }
+      : undefined;
+
+    const [records, purchaseOrders, customerOrders] = await Promise.all([
+      prisma.financialRecord.findMany({
+        where: dateFilter ? { date: dateFilter } : undefined,
+        orderBy: { date: "desc" },
+      }),
+      prisma.purchaseOrder.findMany({
+        where: {
+          status: "ARRIVED",
+          ...(dateFilter ? { arrivedAt: dateFilter } : {}),
+        },
+        include: { items: true, supplier: true },
+      }),
+      prisma.customerOrder.findMany({
+        where: {
+          status: { not: "CANCELLED" },
+          ...(dateFilter ? { orderDate: dateFilter } : {}),
+        },
+        include: { customer: true },
+      }),
+    ]);
+
+    const manualEntries = records.map((r) => ({ ...r, source: "manual" as const }));
+
+    const purchaseEntries = purchaseOrders.map((po) => ({
+      id: `po_${po.id}`,
+      type: "EXPENSE",
+      amount: po.items.reduce((s, i) => s + i.quantity * i.unitCost, 0) + po.shippingFee,
+      description: `采购订单: ${po.supplierOrderNo}${po.supplier ? ` (${po.supplier.name})` : ""}`,
+      category: "采购成本",
+      date: (po.arrivedAt ?? po.orderedAt).toISOString(),
+      createdAt: po.orderedAt.toISOString(),
+      source: "purchase" as const,
+    }));
+
+    const saleEntries = customerOrders.map((co) => ({
+      id: `co_${co.id}`,
+      type: "INCOME",
+      amount: co.totalRevenue,
+      description: `销售订单: ${co.customer.name}`,
+      category: "营业收入",
+      date: co.orderDate.toISOString(),
+      createdAt: co.orderDate.toISOString(),
+      source: "sale" as const,
+    }));
+
+    const allEntries = [...manualEntries, ...purchaseEntries, ...saleEntries].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    return NextResponse.json(allEntries);
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "服务器错误";
     return NextResponse.json({ error: msg }, { status: 401 });
