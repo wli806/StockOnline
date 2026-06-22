@@ -20,10 +20,7 @@ export async function GET(request: NextRequest) {
         orderBy: { date: "desc" },
       }),
       prisma.purchaseOrder.findMany({
-        where: {
-          status: "ARRIVED",
-          ...(dateFilter ? { arrivedAt: dateFilter } : {}),
-        },
+        where: dateFilter ? { orderedAt: dateFilter } : undefined,
         include: { items: true, supplier: true },
       }),
       prisma.customerOrder.findMany({
