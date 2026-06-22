@@ -43,11 +43,17 @@ export default function FinancePage() {
 
   async function load() {
     setLoading(true);
-    let url = "/api/finance";
-    if (startDate && endDate) url += `?start=${startDate}&end=${endDate}T23:59:59`;
-    const res = await fetch(url);
-    setRecords(await res.json());
-    setLoading(false);
+    try {
+      let url = "/api/finance";
+      if (startDate && endDate) url += `?start=${startDate}&end=${endDate}T23:59:59`;
+      const res = await fetch(url);
+      const data = await res.json();
+      setRecords(Array.isArray(data) ? data : []);
+    } catch {
+      setRecords([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { load(); }, [startDate, endDate]);

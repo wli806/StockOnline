@@ -48,8 +48,8 @@ export async function GET(request: NextRequest) {
     const saleEntries = customerOrders.map((co) => ({
       id: `co_${co.id}`,
       type: "INCOME",
-      amount: co.totalRevenue,
-      description: `销售订单: ${co.customer.name}`,
+      amount: co.totalRevenue ?? 0,
+      description: `销售订单: ${co.customer?.name ?? co.customerAddress}`,
       category: "营业收入",
       date: co.orderDate.toISOString(),
       createdAt: co.orderDate.toISOString(),
