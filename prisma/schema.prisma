@@ -118,33 +118,6 @@ model FinancialRecord {
   createdAt   DateTime @default(now())
 }
 
-model SushiOrder {
-  id           String           @id @default(cuid())
-  ossId        String           @unique
-  poNumber     String
-  supplierName String
-  status       Int              // 1=待下单 2=已下单 3=已确认
-  poDate       String?
-  deliveryDate String?
-  orderDate    String?
-  weekNo       Int?
-  year         Int?
-  syncedAt         DateTime         @default(now())
-  inventoryApplied Boolean          @default(false)
-  items            SushiOrderItem[]
-}
-
-model SushiOrderItem {
-  id        String     @id @default(cuid())
-  orderId   String
-  order     SushiOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  ossItemId String
-  itemCode  String
-  itemName  String
-  uom       String
-  quantity  Float
-}
-
 model ActivityLog {
   id        String   @id @default(cuid())
   username  String
@@ -153,12 +126,3 @@ model ActivityLog {
   createdAt DateTime @default(now())
 }
 
-model SushiInventoryItem {
-  id        String   @id @default(cuid())
-  name      String
-  quantity  Float    @default(0)
-  unit      String   @default("")
-  notes     String?
-  updatedAt DateTime @updatedAt
-  createdAt DateTime @default(now())
-}

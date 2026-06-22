@@ -141,8 +141,8 @@ export default function SettingsPage() {
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5 text-sm text-blue-700">
         <strong>权限说明：</strong>
         <ul className="mt-1 space-y-0.5 list-disc list-inside">
-          <li><strong>所有者</strong>：可访问除寿司采购外的所有页面（含用户列表）</li>
-          <li><strong>管理员</strong>：与所有者相同，但不可见寿司采购</li>
+          <li><strong>所有者</strong>：可访问所有页面（含用户列表）</li>
+          <li><strong>管理员</strong>：可管理商品、库存、订单，不可见用户管理和操作日志</li>
           <li><strong>投资者</strong>：可查看成本、资金流动和利润报表</li>
           <li><strong>查看者</strong>：只能查看库存和基本信息</li>
         </ul>
