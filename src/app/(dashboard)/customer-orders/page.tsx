@@ -279,15 +279,17 @@ function CustomerOrdersContent() {
                     <p className="text-emerald-600 font-semibold">利润 {fmt(order.totalProfit)}</p>
                   </div>
                 )}
-                <select
-                  value={order.status}
-                  onChange={e => handleStatusChange(order.id, e.target.value)}
-                  className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-600 focus:outline-none"
-                >
-                  <option value="PENDING">待处理</option>
-                  <option value="COMPLETED">已完成</option>
-                  <option value="CANCELLED">已取消</option>
-                </select>
+                {(role === "OWNER" || role === "MANAGER") && (
+                  <select
+                    value={order.status}
+                    onChange={e => handleStatusChange(order.id, e.target.value)}
+                    className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-600 focus:outline-none"
+                  >
+                    <option value="PENDING">待处理</option>
+                    <option value="COMPLETED">已完成</option>
+                    <option value="CANCELLED">已取消</option>
+                  </select>
+                )}
                 {isOwner && (
                   <button onClick={() => handleDelete(order.id)} className="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50">
                     <Trash2 size={15} />
