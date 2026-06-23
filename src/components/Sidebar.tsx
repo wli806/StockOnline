@@ -38,7 +38,7 @@ interface NavItem {
 // 投资者: 销售订单、财务流水、利润报表
 // 查看者: 总览、库存、商品管理、采购订单、销售订单
 const navItems: NavItem[] = [
-  { href: "/",               label: "总览",   icon: LayoutDashboard, roles: ["OWNER", "MANAGER", "VIEWER"] },
+  { href: "/",               label: "总览",   icon: LayoutDashboard, roles: ["OWNER", "MANAGER", "INVESTOR", "VIEWER"] },
   { href: "/products",       label: "商品管理", icon: Package,         roles: ["OWNER", "MANAGER", "VIEWER"] },
   { href: "/inventory",      label: "库存",   icon: Warehouse,       roles: ["OWNER", "MANAGER", "VIEWER"] },
   { href: "/purchase-orders",label: "采购订单", icon: ShoppingCart,    roles: ["OWNER", "MANAGER", "VIEWER"] },
