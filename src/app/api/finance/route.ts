@@ -49,6 +49,7 @@ export async function GET(request: NextRequest) {
       id: `co_${co.id}`,
       type: "INCOME",
       amount: co.totalRevenue ?? 0,
+      profit: co.totalProfit ?? 0,
       description: `销售订单: ${co.customer?.name ?? co.customerAddress}`,
       category: "营业收入",
       date: co.orderDate.toISOString(),
