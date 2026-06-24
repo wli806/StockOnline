@@ -36,7 +36,6 @@ export default function ReportsPage() {
 
   const totalRevenue = data.reduce((s, r) => s + r.revenue, 0);
   const totalProfit = data.reduce((s, r) => s + r.profit, 0);
-  const totalExpense = data.reduce((s, r) => s + r.expense, 0);
   const totalNet = data.reduce((s, r) => s + r.net, 0);
 
   const maxNet = Math.max(...data.map((r) => Math.abs(r.net)), 1);
@@ -80,11 +79,10 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         {[
           { label: "总营收", value: totalRevenue, color: "text-blue-600" },
           { label: "销售利润", value: totalProfit, color: "text-emerald-600" },
-          { label: "其他支出", value: totalExpense, color: "text-red-500" },
           { label: "净利润", value: totalNet, color: totalNet >= 0 ? "text-emerald-700" : "text-red-600" },
         ].map(({ label, value, color }) => (
           <div key={label} className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm">
@@ -138,7 +136,6 @@ export default function ReportsPage() {
                   <th className="text-right px-4 py-3 font-medium">营收</th>
                   <th className="text-right px-4 py-3 font-medium">销售利润</th>
                   <th className="text-right px-4 py-3 font-medium">其他收入</th>
-                  <th className="text-right px-4 py-3 font-medium">支出</th>
                   <th className="text-right px-6 py-3 font-medium">净利润</th>
                 </tr>
               </thead>
@@ -149,7 +146,6 @@ export default function ReportsPage() {
                     <td className="px-4 py-3 text-right text-slate-600">{fmt(row.revenue)}</td>
                     <td className="px-4 py-3 text-right text-emerald-600">{fmt(row.profit)}</td>
                     <td className="px-4 py-3 text-right text-blue-500">{fmt(row.income)}</td>
-                    <td className="px-4 py-3 text-right text-red-400">{fmt(row.expense)}</td>
                     <td className={`px-6 py-3 text-right font-bold ${row.net >= 0 ? "text-emerald-600" : "text-red-500"}`}>
                       {row.net >= 0 ? "+" : ""}{fmt(row.net)}
                     </td>
