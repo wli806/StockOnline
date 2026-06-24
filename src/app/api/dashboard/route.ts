@@ -15,6 +15,7 @@ export async function GET() {
       lowStockCount,
       pendingPurchaseOrders,
       monthOrders,
+      monthFinance,
       totalCustomers,
       recentOrders,
     ] = await Promise.all([
@@ -23,6 +24,9 @@ export async function GET() {
       prisma.purchaseOrder.count({ where: { status: "PENDING" } }),
       prisma.customerOrder.findMany({
         where: { orderDate: { gte: monthStart, lte: monthEnd }, status: { not: "CANCELLED" } },
+      }),
+      prisma.financialRecord.findMany({
+        where: { date: { gte: monthStart, lte: monthEnd } },
       }),
       prisma.customer.count(),
       prisma.customerOrder.findMany({
@@ -33,7 +37,10 @@ export async function GET() {
     ]);
 
     const monthRevenue = monthOrders.reduce((s, o) => s + o.totalRevenue, 0);
-    const monthProfit = monthOrders.reduce((s, o) => s + o.totalProfit, 0);
+    const monthSalesProfit = monthOrders.reduce((s, o) => s + o.totalProfit, 0);
+    const monthManualIncome = monthFinance.filter((f) => f.type === "INCOME").reduce((s, f) => s + f.amount, 0);
+    const monthManualExpense = monthFinance.filter((f) => f.type === "EXPENSE").reduce((s, f) => s + f.amount, 0);
+    const monthProfit = monthSalesProfit + monthManualIncome - monthManualExpense;
 
     return NextResponse.json({
       totalProducts,
