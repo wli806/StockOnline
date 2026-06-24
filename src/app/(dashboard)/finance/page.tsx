@@ -85,6 +85,9 @@ export default function FinancePage() {
   const totalIncome = records.filter((r) => r.type === "INCOME").reduce((s, r) => s + r.amount, 0);
   const totalExpense = records.filter((r) => r.type === "EXPENSE").reduce((s, r) => s + r.amount, 0);
   const salesProfit = records.filter((r) => r.source === "sale").reduce((s, r) => s + (r.profit ?? 0), 0);
+  const manualIncome = records.filter((r) => r.source === "manual" && r.type === "INCOME").reduce((s, r) => s + r.amount, 0);
+  const manualExpense = records.filter((r) => r.source === "manual" && r.type === "EXPENSE").reduce((s, r) => s + r.amount, 0);
+  const netProfit = salesProfit + manualIncome - manualExpense;
 
   if (role !== "OWNER" && role !== "MANAGER" && role !== "INVESTOR") {
     return (
@@ -115,7 +118,7 @@ export default function FinancePage() {
         {[
           { label: "总收入", value: totalIncome, icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50 border-emerald-200" },
           { label: "总支出", value: totalExpense, icon: TrendingDown, color: "text-red-500", bg: "bg-red-50 border-red-200" },
-          { label: "销售利润", value: salesProfit, icon: DollarSign, color: salesProfit >= 0 ? "text-blue-600" : "text-red-500", bg: "bg-blue-50 border-blue-200" },
+          { label: "净利润", value: netProfit, icon: DollarSign, color: netProfit >= 0 ? "text-blue-600" : "text-red-500", bg: "bg-blue-50 border-blue-200" },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className={`rounded-xl border p-4 ${bg}`}>
             <div className="flex items-center gap-2 mb-1">
